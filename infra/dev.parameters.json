@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": {
+      "value": "dev"
+    },
+    "sqlAdminLogin": {
+      "value": "marblecraft-dev-admin"
+    },
+    "minReplicas": {
+      "value": 0
+    },
+    "sqlSku": {
+      "value": "Basic"
+    },
+    "keyVaultName": {
+      "value": "marblecraft-dev-kv"
+    },
+    "sqlAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/32fa43c7-320e-4315-bbf7-e4c4593a899d/resourceGroups/marblecraft-dev-rg/providers/Microsoft.KeyVault/vaults/marblecraft-dev-kv"
+        },
+        "secretName": "sql-admin-password"
+      }
+    }
+  }
+}
