@@ -69,8 +69,8 @@ az deployment group what-if \
 
 ### What-if output (dev)
 
-![What-if output part 1](screenshots/what-if%20output_whatif-dev-01.png)
-![What-if output part 2](screenshots/what-if%20output_whatif-dev-02.png)
+![What-if output part 1](../screenshots/what-if%20output_whatif-dev-01.png)
+![What-if output part 2](../screenshots/what-if%20output_whatif-dev-02.png)
 
 ```
 Note: The result may contain false positive predictions (noise).
@@ -455,13 +455,13 @@ marblecraft-prod-stack succeeded  9          denyDelete
 ## Screenshots
 
 **`azd up` — dev environment**
-![azd up dev output](screenshots/azd-up-dev.png)
+![azd up dev output](../screenshots/azd-up-dev.png)
 
 **`azd up` — prod environment**
-![azd up prod output](screenshots/azd-up-prod.png)
+![azd up prod output](../screenshots/azd-up-prod.png)
 
 **Azure Portal — dev Deployment Stack**
-![Portal dev stack](screenshots/portal-dev-stack.png)
+![Portal dev stack](../screenshots/portal-dev-stack.png)
 
 **Azure Portal — prod Deployment Stack**
-![Portal prod stack](screenshots/portal-prod-stack.png)
+![Portal prod stack](../screenshots/portal-prod-stack.png)
