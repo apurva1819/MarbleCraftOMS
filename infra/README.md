@@ -449,3 +449,19 @@ Stack                  State      Resources  DenyMode
 marblecraft-dev-stack  succeeded  10         denyDelete
 marblecraft-prod-stack succeeded  9          denyDelete
 ```
+
+---
+
+## Screenshots
+
+**`azd up` — dev environment**
+![azd up dev output](screenshots/azd-up-dev.png)
+
+**`azd up` — prod environment**
+![azd up prod output](screenshots/azd-up-prod.png)
+
+**Azure Portal — dev Deployment Stack**
+![Portal dev stack](screenshots/portal-dev-stack.png)
+
+**Azure Portal — prod Deployment Stack**
+![Portal prod stack](screenshots/portal-prod-stack.png)
