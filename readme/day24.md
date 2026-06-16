@@ -204,13 +204,16 @@ marblecraft-prod-stack succeeded  9          denyDelete
 ## Screenshots
 
 **`azd up` — dev environment**
-![azd up dev output](../screenshots/azd-up-dev.png)
+![azd up dev output](../screenshots/Day24_Deployement_stacks+azd/azd-up-dev.png)
 
 **`azd up` — prod environment**
-![azd up prod output](../screenshots/azd-up-prod.png)
+![azd up prod output](../screenshots/Day24_Deployement_stacks+azd/azd-up-prod.png)
+
+**Stack verification output**
+![Stack verification](../screenshots/Day24_Deployement_stacks+azd/azd-up-stack-verification.png)
 
 **Azure Portal — dev Deployment Stack**
-![Portal dev stack](../screenshots/portal-dev-stack.png)
+![Portal dev stack](../screenshots/Day24_Deployement_stacks+azd/portal-dev-stack.png)
 
 **Azure Portal — prod Deployment Stack**
-![Portal prod stack](../screenshots/portal-prod-stack.png)
+![Portal prod stack](../screenshots/Day24_Deployement_stacks+azd/portal-prod-stack.png)
