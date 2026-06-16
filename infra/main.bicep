@@ -1,11 +1,25 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // main.bicep — MarbleCraft OMS  •  Distributor Order & Stock Allocation
 //
-// Deployment command (dev):
-//   az deployment group create \
+// Deployed via Azure Developer CLI (azd) + Azure Deployment Stacks.
+// azd invokes 'az stack group create' (post-provision hook) which wraps
+// ALL 10 resources in a single managed stack with:
+//   --action-on-unmanage deleteAll   → teardown deletes every resource cleanly
+//   --deny-settings-mode denyDelete  → portal deletion blocked for all members
+//
+// One-command deploy (driven entirely by azd):
+//   azd up --environment dev
+//   azd up --environment prod
+//
+// Manual stack deploy (bypassing azd, for emergencies):
+//   az stack group create \
+//     --name marblecraft-dev-stack \
 //     --resource-group marblecraft-dev-rg \
 //     --template-file main.bicep \
-//     --parameters dev.parameters.json
+//     --parameters dev.parameters.json \
+//     --action-on-unmanage deleteAll \
+//     --deny-settings-mode denyDelete \
+//     --yes
 //
 // The sqlAdminPassword parameter MUST arrive via a Key Vault reference in the
 // parameters file — see dev.parameters.json for the reference format.
@@ -42,6 +56,9 @@ param keyVaultName string
 
 @description('Container image to run in the API Container App')
 param containerImage string = 'mcr.microsoft.com/dotnet/samples:aspnetapp'
+
+@description('Resource ID of an existing Container App Environment to reuse. Empty = create new.')
+param existingContainerAppEnvId string = ''
 
 // ─── Variables ────────────────────────────────────────────────────────────────
 
@@ -92,7 +109,7 @@ module servicebus './modules/servicebus.bicep' = {
   params: {
     location: location
     environment: environment
-    namespaceName: '${prefix}-sb'
+    namespaceName: '${prefix}-sbus'
     skuName: 'Standard'
   }
 }
@@ -113,6 +130,7 @@ module api './modules/api.bicep' = {
     maxReplicas: environment == 'dev' ? 2 : 5
     keyVaultName: keyVaultName
     sqlConnectionStringSecretName: 'sql-connection-string'
+    existingContainerAppEnvId: existingContainerAppEnvId
   }
 }
 

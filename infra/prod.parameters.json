@@ -15,12 +15,12 @@
       "value": "Standard"
     },
     "keyVaultName": {
-      "value": "marblecraft-prod-kv"
+      "value": "mc-prod-kv-32fa"
     },
     "sqlAdminPassword": {
       "reference": {
         "keyVault": {
-          "id": "/subscriptions/32fa43c7-320e-4315-bbf7-e4c4593a899d/resourceGroups/marblecraft-prod-rg/providers/Microsoft.KeyVault/vaults/marblecraft-prod-kv"
+          "id": "/subscriptions/32fa43c7-320e-4315-bbf7-e4c4593a899d/resourceGroups/marblecraft-prod-rg/providers/Microsoft.KeyVault/vaults/mc-prod-kv-32fa"
         },
         "secretName": "sql-admin-password"
       }

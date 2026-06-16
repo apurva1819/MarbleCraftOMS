@@ -41,9 +41,14 @@ param keyVaultName string
 @description('Key Vault secret name that holds the SQL connection string')
 param sqlConnectionStringSecretName string
 
+@description('Resource ID of an existing Container App Environment to reuse. Empty = create new.')
+param existingContainerAppEnvId string = ''
+
 // ─── Container App Environment ────────────────────────────────────────────────
 
-resource containerAppEnv 'Microsoft.App/managedEnvironments@2023-05-01' = {
+var createNewEnv = empty(existingContainerAppEnvId)
+
+resource containerAppEnv 'Microsoft.App/managedEnvironments@2023-05-01' = if (createNewEnv) {
   name: containerAppEnvName
   location: location
   tags: {
@@ -53,6 +58,8 @@ resource containerAppEnv 'Microsoft.App/managedEnvironments@2023-05-01' = {
     zoneRedundant: false
   }
 }
+
+var resolvedEnvId = createNewEnv ? containerAppEnv.id : existingContainerAppEnvId
 
 // ─── Container App ────────────────────────────────────────────────────────────
 
@@ -66,7 +73,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
     type: 'SystemAssigned'
   }
   properties: {
-    managedEnvironmentId: containerAppEnv.id
+    managedEnvironmentId: resolvedEnvId
     configuration: {
       // Key Vault reference — the system identity is granted access in main.bicep
       secrets: [

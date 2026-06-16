@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+# ─────────────────────────────────────────────────────────────────────────────
+# azure.yaml — MarbleCraft OMS  •  Azure Developer CLI (azd) configuration
+#
+# One-command deploy:
+#   azd env new dev
+#   azd env set AZURE_SUBSCRIPTION_ID <id>
+#   azd env set AZURE_LOCATION eastasia
+#   azd env set AZURE_RESOURCE_GROUP marblecraft-dev-rg
+#   azd env set SQL_ADMIN_LOGIN marblecraft-dev-admin
+#   azd env set MIN_REPLICAS 0
+#   azd env set SQL_SKU Basic
+#   azd env set KEY_VAULT_NAME mc-dev-kv-32fa
+#   azd env set KEY_VAULT_RESOURCE_ID /subscriptions/<id>/resourceGroups/marblecraft-dev-rg/providers/Microsoft.KeyVault/vaults/mc-dev-kv-32fa
+#   azd up --environment dev
+# Note: sqlAdminPassword is fetched at deploy time via Key Vault reference — no plaintext secret needed
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: marblecraft-oms
+metadata:
+  template: marblecraft-oms@0.0.1-beta
+
+# ─── Hooks ────────────────────────────────────────────────────────────────────
+# preprovision  → validates env vars and Azure CLI login
+# postprovision → wraps all 10 deployed resources in an Azure Deployment Stack
+#                 with denyDelete protection and deleteAll teardown semantics
+hooks:
+  preprovision:
+    windows:
+      shell: pwsh
+      run: ./scripts/pre-provision.ps1
+      continueOnError: false
+      interactive: true
+    posix:
+      shell: sh
+      run: ./scripts/pre-provision.sh
+      continueOnError: false
+      interactive: true
+
+  postprovision:
+    windows:
+      shell: pwsh
+      run: ./scripts/post-provision.ps1
+      continueOnError: false
+      interactive: true
+    posix:
+      shell: sh
+      run: ./scripts/post-provision.sh
+      continueOnError: false
+      interactive: true
+
+# ─── Infrastructure ───────────────────────────────────────────────────────────
+infra:
+  provider: bicep
+  path: infra
+  module: main
