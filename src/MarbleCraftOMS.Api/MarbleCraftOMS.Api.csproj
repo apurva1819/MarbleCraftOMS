@@ -8,12 +8,23 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MarbleCraftOMS.Core\MarbleCraftOMS.Core.csproj" />
+  </ItemGroup>      
+
+  <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.13.1" />
+    <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.3.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.10.0-beta.1" />
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.2" />
     <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.3.2" />
     <PackageReference Include="Microsoft.Extensions.Azure" Version="1.7.5" />
     <PackageReference Include="Microsoft.Identity.Web" Version="3.8.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
   </ItemGroup>
+
+  <ItemGroup>
+  <ProjectReference Include="..\MarbleCraftOMS.Application\MarbleCraftOMS.Application.csproj" />
+  <ProjectReference Include="..\MarbleCraftOMS.Infrastructure\MarbleCraftOMS.Infrastructure.csproj" />
+</ItemGroup>
 
 </Project>

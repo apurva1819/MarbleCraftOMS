@@ -7,6 +7,7 @@ namespace MarbleCraftOMS.Api.Controllers;
 [Route("api")]
 public class AuthController : ControllerBase
 {
+    [AllowAnonymous]
     [HttpGet("health")]
     public IActionResult Health() =>
         Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
