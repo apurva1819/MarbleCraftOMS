@@ -44,6 +44,9 @@ param sqlConnectionStringSecretName string
 @description('Resource ID of an existing Container App Environment to reuse. Empty = create new.')
 param existingContainerAppEnvId string = ''
 
+@description('ACR login server (e.g. mcacr32fa.azurecr.io). Required for managed-identity image pulls.')
+param acrLoginServer string = ''
+
 // ─── Container App Environment ────────────────────────────────────────────────
 
 var createNewEnv = empty(existingContainerAppEnvId)
@@ -77,6 +80,12 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
   properties: {
     managedEnvironmentId: resolvedEnvId
     configuration: {
+      registries: empty(acrLoginServer) ? [] : [
+        {
+          server: acrLoginServer
+          identity: 'system'
+        }
+      ]
       // Key Vault reference — the system identity is granted access in main.bicep
       secrets: [
         {

@@ -151,6 +151,7 @@ module api './modules/api.bicep' = {
     keyVaultName: keyVaultName
     sqlConnectionStringSecretName: 'sql-connection-string'
     existingContainerAppEnvId: existingContainerAppEnvId
+    acrLoginServer: '${acrName}.azurecr.io'
   }
 }
 
