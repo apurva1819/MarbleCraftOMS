@@ -27,6 +27,9 @@
     },
     "acrName": {
       "value": "mcacr32fa"
+    },
+    "acrResourceGroup": {
+      "value": "marblecraft-dev-rg"
     }
   }
 }

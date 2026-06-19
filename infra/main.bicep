@@ -63,6 +63,9 @@ param existingContainerAppEnvId string = ''
 @description('Name of the Azure Container Registry used by azd to push and pull images')
 param acrName string
 
+@description('Resource group that contains the shared ACR')
+param acrResourceGroup string
+
 // ─── Variables ────────────────────────────────────────────────────────────────
 
 var prefix = 'marblecraft-${environment}'
@@ -87,9 +90,6 @@ resource existingKeyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   name: keyVaultName
 }
 
-resource existingAcr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
-  name: acrName
-}
 
 // ─── Module: Virtual Network + Private DNS ───────────────────────────────────
 
@@ -171,19 +171,15 @@ resource kvSecretsUserRoleAssignment 'Microsoft.Authorization/roleAssignments@20
   }
 }
 
-// ─── Grant Container App identity AcrPull role ───────────────────────────────
-// Role definition ID: 7f951dda-4ed3-4680-a7ca-43fe172d538d = AcrPull
+// ─── Grant Container App identity AcrPull role (cross-RG module) ─────────────
 
-resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: existingAcr
-  name: guid(existingAcr.id, '${prefix}-api', 'acr-pull')
-  properties: {
-    roleDefinitionId: subscriptionResourceId(
-      'Microsoft.Authorization/roleDefinitions',
-      '7f951dda-4ed3-4680-a7ca-43fe172d538d'
-    )
+module acrRbac './modules/acr-rbac.bicep' = {
+  name: '${prefix}-acr-rbac-deploy'
+  scope: resourceGroup(acrResourceGroup)
+  params: {
+    acrName: acrName
     principalId: api.outputs.principalId
-    principalType: 'ServicePrincipal'
+    deploymentPrefix: prefix
   }
 }
 
