@@ -68,6 +68,8 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
   location: location
   tags: {
     environment: environment
+    'azd-service-name': 'api'
+    'azd-env-name': environment
   }
   identity: {
     type: 'SystemAssigned'

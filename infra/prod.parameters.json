@@ -24,6 +24,9 @@
         },
         "secretName": "sql-admin-password"
       }
+    },
+    "acrName": {
+      "value": "mcacr32fa"
     }
   }
 }

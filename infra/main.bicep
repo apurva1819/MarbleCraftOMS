@@ -60,6 +60,9 @@ param containerImage string = 'mcr.microsoft.com/dotnet/samples:aspnetapp'
 @description('Resource ID of an existing Container App Environment to reuse. Empty = create new.')
 param existingContainerAppEnvId string = ''
 
+@description('Name of the Azure Container Registry used by azd to push and pull images')
+param acrName string
+
 // ─── Variables ────────────────────────────────────────────────────────────────
 
 var prefix = 'marblecraft-${environment}'
@@ -82,6 +85,10 @@ var sqlSkuMap = {
 
 resource existingKeyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   name: keyVaultName
+}
+
+resource existingAcr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
+  name: acrName
 }
 
 // ─── Module: Virtual Network + Private DNS ───────────────────────────────────
@@ -158,6 +165,22 @@ resource kvSecretsUserRoleAssignment 'Microsoft.Authorization/roleAssignments@20
     roleDefinitionId: subscriptionResourceId(
       'Microsoft.Authorization/roleDefinitions',
       '4633458b-17de-408a-b874-0445c86b69e6'
+    )
+    principalId: api.outputs.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// ─── Grant Container App identity AcrPull role ───────────────────────────────
+// Role definition ID: 7f951dda-4ed3-4680-a7ca-43fe172d538d = AcrPull
+
+resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: existingAcr
+  name: guid(existingAcr.id, '${prefix}-api', 'acr-pull')
+  properties: {
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '7f951dda-4ed3-4680-a7ca-43fe172d538d'
     )
     principalId: api.outputs.principalId
     principalType: 'ServicePrincipal'
