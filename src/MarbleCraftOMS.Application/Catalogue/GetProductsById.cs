@@ -1,7 +1,6 @@
 namespace MarbleCraftOMS.Application.Catalogue;
 
-public class GetProductsQuery{
-
+public class GetProductsByIdQuery
+{
     public int Id { get; set; }
-
 }

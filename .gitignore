@@ -482,3 +482,5 @@ $RECYCLE.BIN/
 *.swp
 M a r b l e C r a f t O M S . s l n x  
  
+# Bicep compiled output
+infra/main.json

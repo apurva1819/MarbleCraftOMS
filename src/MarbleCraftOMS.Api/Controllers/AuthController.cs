@@ -1,10 +1,12 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarbleCraftOMS.Api.Controllers;
 
 [ApiController]
-[Route("api")]
+[Route("api/v{version:apiVersion}")]
+[ApiVersion("1.0")]
 public class AuthController : ControllerBase
 {
     [AllowAnonymous]

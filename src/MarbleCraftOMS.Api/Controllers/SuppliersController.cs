@@ -1,15 +1,19 @@
+using Asp.Versioning;
 using MarbleCraftOMS.Application.Suppliers;
 using MarbleCraftOMS.Core.Entities;
 using MarbleCraftOMS.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Diagnostics;
 
 namespace MarbleCraftOMS.Api.Controllers;
 
 [ApiController]
-[Route("api/suppliers")]
+[Route("api/v{version:apiVersion}/suppliers")]
 [Authorize]
+[EnableRateLimiting("fixed")]
+[ApiVersion("1.0")]
 public class SuppliersController(ISupplierRepository repo, ILogger<SuppliersController> logger) : ControllerBase
 {
     [HttpGet]
@@ -31,6 +35,7 @@ public class SuppliersController(ISupplierRepository repo, ILogger<SuppliersCont
 
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
+    [EnableRateLimiting("fixed-write")]
     public async Task<IActionResult> Add(AddSupplierCommand cmd)
     {
         var sw = Stopwatch.StartNew();
@@ -52,6 +57,7 @@ public class SuppliersController(ISupplierRepository repo, ILogger<SuppliersCont
 
     [HttpPut("{id}")]
     [Authorize(Policy = "AdminOnly")]
+    [EnableRateLimiting("fixed-write")]
     public async Task<IActionResult> Update(int id, UpdateSupplierCommand cmd)
     {
         var sw = Stopwatch.StartNew();
@@ -74,6 +80,7 @@ public class SuppliersController(ISupplierRepository repo, ILogger<SuppliersCont
 
     [HttpDelete("{id}")]
     [Authorize(Policy = "AdminOnly")]
+    [EnableRateLimiting("fixed-write")]
     public async Task<IActionResult> Delete(int id)
     {
         var sw = Stopwatch.StartNew();

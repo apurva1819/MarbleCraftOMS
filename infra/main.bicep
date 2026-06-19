@@ -84,6 +84,17 @@ resource existingKeyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   name: keyVaultName
 }
 
+// ─── Module: Virtual Network + Private DNS ───────────────────────────────────
+
+module network './modules/network.bicep' = {
+  name: '${prefix}-network-deploy'
+  params: {
+    location: location
+    environment: environment
+    vnetName: '${prefix}-vnet'
+  }
+}
+
 // ─── Module: SQL Server + Database ────────────────────────────────────────────
 
 module sql './modules/sql.bicep' = {
@@ -98,6 +109,8 @@ module sql './modules/sql.bicep' = {
     sqlSkuName: sqlSkuMap[sqlSku].skuName
     sqlSkuTier: sqlSkuMap[sqlSku].skuTier
     sqlMaxSizeBytes: sqlSkuMap[sqlSku].maxSizeBytes
+    privateEndpointSubnetId: network.outputs.privateEndpointSubnetId
+    privateDnsZoneId: network.outputs.sqlPrivateDnsZoneId
   }
 }
 
@@ -164,3 +177,9 @@ output containerAppFqdn string = api.outputs.containerAppFqdn
 
 @description('Container App system-assigned identity principal ID')
 output containerAppPrincipalId string = api.outputs.principalId
+
+@description('Virtual Network resource ID')
+output vnetId string = network.outputs.vnetId
+
+@description('Private endpoint subnet resource ID')
+output privateEndpointSubnetId string = network.outputs.privateEndpointSubnetId

@@ -8,4 +8,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     
     public DbSet<Supplier> Suppliers { get; set; }
+
+    public DbSet<Product> Products { get; set; }
 }

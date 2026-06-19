@@ -33,6 +33,12 @@ param sqlSkuTier string
 @description('Maximum database size in bytes  (2 GB dev / 50 GB prod)')
 param sqlMaxSizeBytes int
 
+@description('Resource ID of the private endpoint subnet — empty string = no private endpoint')
+param privateEndpointSubnetId string = ''
+
+@description('Resource ID of the private DNS zone for SQL — empty string = skip DNS zone group')
+param privateDnsZoneId string = ''
+
 // ─── SQL Server ───────────────────────────────────────────────────────────────
 
 resource sqlServer 'Microsoft.Sql/servers@2022-11-01-preview' = {
@@ -45,7 +51,7 @@ resource sqlServer 'Microsoft.Sql/servers@2022-11-01-preview' = {
     administratorLogin: sqlAdminLogin
     administratorLoginPassword: sqlAdminPassword
     version: '12.0'
-    publicNetworkAccess: 'Enabled'
+    publicNetworkAccess: empty(privateEndpointSubnetId) ? 'Enabled' : 'Disabled'
     minimalTlsVersion: '1.2'
   }
 }
@@ -69,6 +75,40 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2022-11-01-preview' = {
   }
 }
 
+// ─── Private Endpoint ────────────────────────────────────────────────────────
+
+resource sqlPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' =
+  if (!empty(privateEndpointSubnetId)) {
+    name: '${sqlServerName}-pe'
+    location: location
+    properties: {
+      subnet: { id: privateEndpointSubnetId }
+      privateLinkServiceConnections: [
+        {
+          name: '${sqlServerName}-plsc'
+          properties: {
+            privateLinkServiceId: sqlServer.id
+            groupIds: ['sqlServer']
+          }
+        }
+      ]
+    }
+  }
+
+resource sqlPrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-05-01' =
+  if (!empty(privateEndpointSubnetId) && !empty(privateDnsZoneId)) {
+    parent: sqlPrivateEndpoint
+    name: 'default'
+    properties: {
+      privateDnsZoneConfigs: [
+        {
+          name: 'privatelink-database-windows-net'
+          properties: { privateDnsZoneId: privateDnsZoneId }
+        }
+      ]
+    }
+  }
+
 // ─── Outputs ──────────────────────────────────────────────────────────────────
 
 @description('Fully-qualified domain name of the SQL Server')
@@ -76,3 +116,6 @@ output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
 
 @description('Resource ID of the SQL Database')
 output sqlDatabaseId string = sqlDatabase.id
+
+@description('Resource ID of the SQL Server')
+output sqlServerId string = sqlServer.id
