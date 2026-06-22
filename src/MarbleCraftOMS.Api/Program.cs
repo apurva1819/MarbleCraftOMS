@@ -27,13 +27,15 @@ if (!string.IsNullOrEmpty(keyVaultUri))
 
 // OpenTelemetry → App Insights
 // Connection string stored in Key Vault as "appinsights-connection-string" — never hardcoded
-builder.Services.AddOpenTelemetry()
-    .UseAzureMonitor(options =>
-    {
-        options.ConnectionString = builder.Configuration["appinsights-connection-string"];
-    })
-    .WithTracing(tracing => tracing
-        .AddEntityFrameworkCoreInstrumentation());
+// Skipped locally when Key Vault is not configured
+var appInsightsConnStr = builder.Configuration["appinsights-connection-string"];
+if (!string.IsNullOrEmpty(appInsightsConnStr))
+{
+    builder.Services.AddOpenTelemetry()
+        .UseAzureMonitor(options => options.ConnectionString = appInsightsConnStr)
+        .WithTracing(tracing => tracing
+            .AddEntityFrameworkCoreInstrumentation());
+}
 
 // Correlation ID — OpenTelemetry logging exporter stamps trace/span ID on every log entry
 builder.Logging.AddOpenTelemetry(o =>
