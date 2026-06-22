@@ -12,7 +12,7 @@ public class AuditMiddleware(RequestDelegate next, ILogger<AuditMiddleware> logg
         var user = context.User.Identity?.Name ?? "anonymous";
 
         // ReadOnlySpan<char> slices without allocating a new string unless truncation is needed
-        ReadOnlySpan<char> rawPath = context.Request.Path.Value.AsSpan();
+        ReadOnlySpan<char> rawPath = (context.Request.Path.Value ?? string.Empty).AsSpan();
         var path = rawPath.Length <= MaxPathLog
             ? context.Request.Path.Value
             : new string(rawPath[..MaxPathLog]);
