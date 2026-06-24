@@ -10,4 +10,5 @@
   <ItemGroup>
     <ProjectReference Include="..\MarbleCraftOMS.Core\MarbleCraftOMS.Core.csproj" />
   </ItemGroup>
+
 </Project>

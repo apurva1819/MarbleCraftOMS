@@ -1,7 +1,5 @@
 using Asp.Versioning;
 using MarbleCraftOMS.Application.Catalogue;
-using MarbleCraftOMS.Core.Entities;
-using MarbleCraftOMS.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -13,16 +11,23 @@ namespace MarbleCraftOMS.Api.Controllers;
 [Authorize]
 [EnableRateLimiting("fixed")]
 [ApiVersion("1.0")]
-public class ProductsController(IProductRepository repo) : ControllerBase
+public class ProductsController(IProductService productService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll() =>
-        Ok(await repo.GetAllAsync());
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        if (page < 1) page = 1;
+        if (pageSize is < 1 or > 100) pageSize = 20;
+        var result = await productService.BrowseAsync(page, pageSize);
+        return Ok(result);
+    }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var product = await repo.GetByIdAsync(id);
+        var product = await productService.GetByIdAsync(id);
         return product is null ? NotFound() : Ok(product);
     }
 
@@ -31,20 +36,15 @@ public class ProductsController(IProductRepository repo) : ControllerBase
     [EnableRateLimiting("fixed-write")]
     public async Task<IActionResult> Add(AddProductCommand cmd)
     {
-        var product = new Product
+        try
         {
-            Name = cmd.Name,
-            Material = cmd.Material,
-            Format = cmd.Format,
-            Surface = cmd.Surface,
-            Color = cmd.Color,
-            Size = cmd.Size,
-            CountryOfOrigin = cmd.CountryOfOrigin,
-            PricePerUnit = cmd.PricePerUnit,
-            SupplierId = cmd.SupplierId
-        };
-        await repo.AddAsync(product);
-        return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
+            var product = await productService.AddAsync(cmd);
+            return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
+        }
+        catch (ArgumentException ex)
+        {
+            return UnprocessableEntity(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id}")]
@@ -52,21 +52,15 @@ public class ProductsController(IProductRepository repo) : ControllerBase
     [EnableRateLimiting("fixed-write")]
     public async Task<IActionResult> Update(int id, UpdateProductCommand cmd)
     {
-        var product = await repo.GetByIdAsync(id);
-        if (product is null) return NotFound();
-
-        product.Name = cmd.Name;
-        product.Material = cmd.Material;
-        product.Format = cmd.Format;
-        product.Surface = cmd.Surface;
-        product.Color = cmd.Color;
-        product.Size = cmd.Size;
-        product.CountryOfOrigin = cmd.CountryOfOrigin;
-        product.PricePerUnit = cmd.PricePerUnit;
-        product.SupplierId = cmd.SupplierId;
-
-        await repo.UpdateAsync(product);
-        return NoContent();
+        try
+        {
+            var updated = await productService.UpdateAsync(id, cmd);
+            return updated ? NoContent() : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return UnprocessableEntity(new { message = ex.Message });
+        }
     }
 
     [HttpDelete("{id}")]
@@ -74,9 +68,7 @@ public class ProductsController(IProductRepository repo) : ControllerBase
     [EnableRateLimiting("fixed-write")]
     public async Task<IActionResult> Delete(int id)
     {
-        var product = await repo.GetByIdAsync(id);
-        if (product is null) return NotFound();
-        await repo.DeleteAsync(id);
-        return NoContent();
+        var deleted = await productService.DeleteAsync(id);
+        return deleted ? NoContent() : NotFound();
     }
 }
