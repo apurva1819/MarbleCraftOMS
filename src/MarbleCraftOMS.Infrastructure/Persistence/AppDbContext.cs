@@ -1,13 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using MarbleCraftOMS.Core.Entities;
-using MarbleCraftOMS.Infrastructure.Persistence;
 
 namespace MarbleCraftOMS.Infrastructure.Persistence;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    
     public DbSet<Supplier> Suppliers { get; set; }
-
     public DbSet<Product> Products { get; set; }
+    public DbSet<StockLot> StockLots { get; set; }
+    public DbSet<Customer> Customers { get; set; }
+    public DbSet<DistributorOrder> DistributorOrders { get; set; }
+    public DbSet<OrderLine> OrderLines { get; set; }
+    public DbSet<AppUser> Users { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+    }
 }
