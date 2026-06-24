@@ -1,2 +1,7 @@
 <Solution>
+  <Project Path="src/MarbleCraftOMS.Api/MarbleCraftOMS.Api.csproj" />
+  <Project Path="src/MarbleCraftOMS.Application/MarbleCraftOMS.Application.csproj" />
+  <Project Path="src/MarbleCraftOMS.Core/MarbleCraftOMS.Core.csproj" />
+  <Project Path="src/MarbleCraftOMS.Infrastructure/MarbleCraftOMS.Infrastructure.csproj" />
+  <Project Path="src/MarbleCraftOMS.BackgroundServices/MarbleCraftOMS.BackgroundServices.csproj" />
 </Solution>

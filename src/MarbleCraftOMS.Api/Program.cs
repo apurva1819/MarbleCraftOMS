@@ -1,9 +1,16 @@
+using System.Text;
 using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using OpenTelemetry.Trace;
+using MarbleCraftOMS.Api.Data;
 using MarbleCraftOMS.Core.Constants;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using MarbleCraftOMS.Application.Catalogue;
+using MarbleCraftOMS.Application.Inventory;
 using MarbleCraftOMS.Core.Interfaces;
 using MarbleCraftOMS.Infrastructure.Persistence;
+using MarbleCraftOMS.Infrastructure.Persistence.DapperQueries;
 using MarbleCraftOMS.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
@@ -12,6 +19,10 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
 using MarbleCraftOMS.Api.Middleware;
+using MarbleCraftOMS.Api.Services;
+using MarbleCraftOMS.Application.Auth;
+using MarbleCraftOMS.Application.Suppliers;
+using MarbleCraftOMS.Infrastructure.Services;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,8 +60,18 @@ builder.Logging.AddOpenTelemetry(o =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IProductBrowseQuery, ProductBrowseQuery>();
+builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+builder.Services.AddScoped<IStockSummaryQuery, StockSummaryQuery>();
+
+builder.Services.AddScoped(typeof(ICache<>), typeof(MemoryCacheAdapter<>));
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ISupplierService, SupplierService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -85,9 +106,52 @@ builder.Services.AddAzureClients(clients =>
     clients.UseCredential(new DefaultAzureCredential());
 });
 
+// Policy scheme: routes to "Local" when the token's issuer matches the local JWT issuer,
+// otherwise falls back to "Bearer" (Entra ID). This provides a DefaultChallengeScheme so
+// plain [Authorize] works without specifying a scheme explicitly.
+var localIssuer = builder.Configuration["Jwt:Issuer"] ?? "MarbleCraftOMS";
+var authBuilder = builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = "Smart";
+        options.DefaultChallengeScheme = "Smart";
+    })
+    .AddPolicyScheme("Smart", "JWT scheme selector", o =>
+    {
+        o.ForwardDefaultSelector = ctx =>
+        {
+            var bearer = ctx.Request.Headers.Authorization.FirstOrDefault();
+            if (bearer?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                try
+                {
+                    var raw = bearer["Bearer ".Length..].Trim();
+                    var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler()
+                        .ReadJwtToken(raw);
+                    if (jwt.Issuer == localIssuer) return "Local";
+                }
+                catch { /* malformed token — let Entra ID scheme reject it */ }
+            }
+            return Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+        };
+    });
+
 // Entra ID JWT — validates bearer tokens issued by Azure AD for this app registration
-builder.Services.AddAuthentication()
-    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+authBuilder.AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+
+// Local JWT — validates tokens issued by POST /login (dev/demo flow)
+authBuilder.AddJwtBearer("Local", options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        ValidateLifetime = true,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+    };
+});
 
 builder.Services.AddAuthorization(options =>
 {
@@ -148,6 +212,14 @@ builder.Services.AddApiVersioning(options =>
 builder.Services.AddControllers();
 
 var app = builder.Build();
+
+// Apply pending migrations and seed initial users on first run
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+    await DbInitializer.SeedAsync(db);
+}
 
 app.UseSwagger();
 app.UseSwaggerUI(options =>

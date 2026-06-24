@@ -8,4 +8,7 @@
     <ProjectReference Include="..\MarbleCraftOMS.Core\MarbleCraftOMS.Core.csproj" />
     <ProjectReference Include="..\MarbleCraftOMS.Infrastructure\MarbleCraftOMS.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.14.2" />
+  </ItemGroup>
 </Project>

@@ -61,7 +61,6 @@ services:
     project: src/MarbleCraftOMS.Api
     language: dotnet
     host: containerapp
-    resourceName: marblecraft-dev-api
     docker:
       path: src/MarbleCraftOMS.Api/Dockerfile
       registry: mcacr32fa.azurecr.io
