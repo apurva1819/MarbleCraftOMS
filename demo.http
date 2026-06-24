@@ -1,0 +1,122 @@
+# MarbleCraftOMS — API Demo
+# VS Code: install "REST Client" extension, then click "Send Request" above each block
+# IMPORTANT: Run block 2 (Login) FIRST, then paste the token into @token below
+
+@base = https://localhost:7001/api/v1
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwidW5pcXVlX25hbWUiOiJhZG1pbiIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFkbWluIiwiZGlzdHJpYnV0b3JJZCI6IiIsImV4cCI6MTc4MjMwODQ1MCwiaXNzIjoiTWFyYmxlQ3JhZnRPTVMiLCJhdWQiOiJNYXJibGVDcmFmdE9NUy5BcGkifQ.x_mKURFRTnddkta36TxcsOAQWtLVHcTkVPY9_p48nbo
+
+### 1. Health check (no auth required)
+GET {{base}}/health
+
+###
+
+### 2. Login — get JWT token  ← RUN THIS FIRST, then update @token above
+# @name login
+POST {{base}}/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+###
+
+### 3. Me — verify local JWT is accepted
+GET {{base}}/me-local
+Authorization: Bearer {{token}}
+
+###
+
+### 4. Products — browse catalogue (paginated)
+GET {{base}}/products?page=1&pageSize=10
+Authorization: Bearer {{token}}
+
+###
+
+### 5. Product by ID
+GET {{base}}/products/1
+Authorization: Bearer {{token}}
+
+###
+
+### 6. Inventory summary — stock across all products
+GET {{base}}/inventory/summary
+Authorization: Bearer {{token}}
+
+###
+
+### 7. Inventory by product ID
+GET {{base}}/inventory/1
+Authorization: Bearer {{token}}
+
+###
+
+### 8. Suppliers list
+GET {{base}}/suppliers
+Authorization: Bearer {{token}}
+
+###
+
+### 9. Add supplier  ← run this before POST product (products need a valid SupplierId)
+POST {{base}}/suppliers
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "companyName": "Rajasthan Marble Co.",
+  "contactName": "Rajesh Kumar",
+  "contactPhone": "+91-9876543210",
+  "contactEmail": "rajesh@rajasthanmarble.com",
+  "address": "123 Marble Street, Kishangarh",
+  "country": "India",
+  "specialisation": "Makrana White Marble"
+}
+
+###
+
+### 10. Add product  ← use the SupplierId returned by block 9
+POST {{base}}/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Makrana White 60x60",
+  "material": "Marble",
+  "format": "Tile",
+  "surface": "Polished",
+  "color": "White",
+  "size": "60x60cm",
+  "countryOfOrigin": "India",
+  "pricePerUnit": 48.50,
+  "supplierId": 1
+}
+
+###
+
+### 11. Adjust inventory — commit stock (requires a valid stockLotId)
+### AdjustmentType: "Commit" (reserves stock for an order) or "Release" (frees it back)
+POST {{base}}/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "stockLotId": 1,
+  "quantity": 10,
+  "type": "Commit",
+  "reason": "Reserved for order ORD-001"
+}
+
+###
+
+### 12. Adjust inventory — release stock back
+POST {{base}}/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "stockLotId": 1,
+  "quantity": 10,
+  "type": "Release",
+  "reason": "Order ORD-001 cancelled"
+}
