@@ -1,6 +1,8 @@
 using MarbleCraftOMS.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -8,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace MarbleCraftOMS.IntegrationTests;
 
@@ -55,6 +58,14 @@ public class MarbleCraftFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
             // Remove background services — the Channel reader loops would block teardown
             services.RemoveAll<IHostedService>();
+
+            // Raise rate-limit ceilings so tests don't exhaust the 10/min write window
+            services.RemoveAll(typeof(IConfigureOptions<RateLimiterOptions>));
+            services.AddRateLimiter(opts =>
+            {
+                opts.AddFixedWindowLimiter("fixed",       o => { o.PermitLimit = 10_000; o.Window = TimeSpan.FromMinutes(1); });
+                opts.AddFixedWindowLimiter("fixed-write", o => { o.PermitLimit = 10_000; o.Window = TimeSpan.FromMinutes(1); });
+            });
         });
     }
 }
