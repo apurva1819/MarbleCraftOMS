@@ -21,7 +21,11 @@ using Asp.Versioning;
 using MarbleCraftOMS.Api.Middleware;
 using MarbleCraftOMS.Api.Services;
 using MarbleCraftOMS.Application.Auth;
+using MarbleCraftOMS.Application.Notifications;
+using MarbleCraftOMS.Application.Orders;
 using MarbleCraftOMS.Application.Suppliers;
+using MarbleCraftOMS.BackgroundServices;
+using MarbleCraftOMS.Infrastructure.Messaging;
 using MarbleCraftOMS.Infrastructure.Services;
 using Microsoft.OpenApi;
 
@@ -72,6 +76,18 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
+// Event bus: singleton so the Channel lives for the app lifetime
+builder.Services.AddSingleton<InMemoryEventBus>();
+builder.Services.AddSingleton<IEventBus>(sp => sp.GetRequiredService<InMemoryEventBus>());
+
+// Hosted services that read from the Channel and write to DB via IServiceScopeFactory
+builder.Services.AddHostedService<NotificationConsumer>();
+builder.Services.AddHostedService<LowStockMonitor>();
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -217,7 +233,10 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
+    if (db.Database.IsSqlServer())
+        await db.Database.MigrateAsync();
+    else
+        await db.Database.EnsureCreatedAsync();
     await DbInitializer.SeedAsync(db);
 }
 

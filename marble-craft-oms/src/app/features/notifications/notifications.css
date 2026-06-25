@@ -1,0 +1,27 @@
+.unread-chip {
+  background: var(--danger); color: #fff;
+  font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 999px;
+  margin-left: 10px; vertical-align: middle;
+}
+
+.notif-feed { display: flex; flex-direction: column; gap: 10px; }
+
+.notif-card {
+  display: flex; align-items: flex-start; gap: 14px;
+  cursor: pointer; transition: box-shadow .15s;
+}
+.notif-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+.unread-card { border-left: 3px solid var(--accent); }
+
+.notif-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+
+.notif-body-wrap { flex: 1; }
+
+.notif-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+.notif-title { font-size: 14px; font-weight: 600; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.notif-date { margin-left: auto; font-size: 11px; color: var(--text-2); }
+
+.notif-body { font-size: 13px; color: var(--text-2); margin-bottom: 4px; }
+.notif-type { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; }

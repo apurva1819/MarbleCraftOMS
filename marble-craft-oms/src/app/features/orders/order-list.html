@@ -1,0 +1,63 @@
+<div class="page-header">
+  <h1>Orders</h1>
+  @if (auth.isDistributor()) {
+    <a routerLink="/orders/new" class="btn btn-primary">+ Place Order</a>
+  }
+</div>
+
+@if (actionError()) {
+  <div class="alert alert-error mt-4" style="margin-bottom:12px">{{ actionError() }}</div>
+}
+
+<div class="card">
+  @if (loading()) {
+    <div class="empty">Loading orders…</div>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Order #</th>
+            <th>Customer</th>
+            <th>Date</th>
+            <th>Lines</th>
+            <th class="text-right">Total</th>
+            <th>Status</th>
+            @if (auth.isSalesOrAdmin()) { <th>Actions</th> }
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of orders(); track o.id) {
+            <tr>
+              <td>
+                <a [routerLink]="['/orders', o.id]" class="order-link">{{ o.orderNumber }}</a>
+              </td>
+              <td>{{ o.customerName }}</td>
+              <td>{{ o.orderDate | date:'dd MMM yyyy' }}</td>
+              <td>{{ o.lineCount }}</td>
+              <td class="text-right">{{ o.totalAmount | currency:'INR':'symbol':'1.0-2' }}</td>
+              <td><span [class]="statusClass(o.status)">{{ o.status }}</span></td>
+              @if (auth.isSalesOrAdmin()) {
+                <td>
+                  <div class="actions">
+                    @if (o.status === 'Pending') {
+                      <button class="btn btn-success" (click)="confirm(o)">Confirm</button>
+                    }
+                    @if (o.status === 'Confirmed') {
+                      <button class="btn btn-warning" (click)="dispatch(o)">Dispatch</button>
+                    }
+                    @if (o.status !== 'Dispatched' && o.status !== 'Cancelled') {
+                      <button class="btn btn-danger" (click)="cancel(o)">Cancel</button>
+                    }
+                  </div>
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="empty">No orders yet.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

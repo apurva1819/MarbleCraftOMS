@@ -1,0 +1,35 @@
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-brand">
+      <span class="login-mark">&#9670;</span>
+      <span class="login-title">MarbleCraft OMS</span>
+    </div>
+    <p class="login-sub">Order Management System</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
+      @if (error()) {
+        <div class="alert alert-error">{{ error() }}</div>
+      }
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input id="username" formControlName="username" type="text" placeholder="e.g. admin" autocomplete="username" />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" formControlName="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+
+      <button type="submit" class="btn btn-primary login-btn" [disabled]="loading()">
+        {{ loading() ? 'Signing in…' : 'Sign in' }}
+      </button>
+    </form>
+
+    <div class="login-hints">
+      <span>admin / Admin&#64;123</span>
+      <span>salesagent / Sales&#64;123</span>
+      <span>distributor / Dist&#64;123</span>
+    </div>
+  </div>
+</div>

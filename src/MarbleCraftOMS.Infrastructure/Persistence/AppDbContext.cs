@@ -12,6 +12,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<DistributorOrder> DistributorOrders { get; set; }
     public DbSet<OrderLine> OrderLines { get; set; }
     public DbSet<AppUser> Users { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

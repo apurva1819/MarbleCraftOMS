@@ -1,0 +1,2 @@
+.order-link { color: var(--accent); font-weight: 600; }
+.order-link:hover { text-decoration: underline; }

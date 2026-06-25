@@ -1,0 +1,73 @@
+<div class="page-header">
+  <h1>Inventory</h1>
+</div>
+
+@if (loading()) {
+  <div class="empty">Loading inventory…</div>
+} @else {
+
+  <div class="stats-row">
+    <div class="stat-card card">
+      <div class="stat-label">Total SKUs</div>
+      <div class="stat-value">{{ items().length }}</div>
+    </div>
+    <div class="stat-card card">
+      <div class="stat-label">Total On Hand</div>
+      <div class="stat-value">{{ totalOnHand() }}</div>
+    </div>
+    <div class="stat-card card">
+      <div class="stat-label">Total Available</div>
+      <div class="stat-value">{{ totalAvail() }}</div>
+    </div>
+    <div class="stat-card card">
+      <div class="stat-label">Low Stock</div>
+      <div class="stat-value low-stock">{{ lowCount() }}</div>
+    </div>
+  </div>
+
+  <div class="card mt-4">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Material</th>
+            <th class="text-right">On Hand</th>
+            <th class="text-right">Committed</th>
+            <th class="text-right">Available</th>
+            <th>Lots</th>
+            <th>Utilization</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.productId) {
+            <tr [class.row-low]="isLow(item)">
+              <td><strong>{{ item.productName }}</strong></td>
+              <td>{{ item.material }}</td>
+              <td class="text-right">{{ item.totalOnHand }}</td>
+              <td class="text-right">{{ item.totalCommitted }}</td>
+              <td class="text-right" [class.low-stock]="isLow(item)">{{ item.totalAvailable }}</td>
+              <td>{{ item.lotCount }}</td>
+              <td>
+                <div class="progress-wrap">
+                  <div class="progress-bar" [style.width.%]="utilizationPct(item)" [class.bar-high]="utilizationPct(item) > 80"></div>
+                </div>
+                <span class="pct-label">{{ utilizationPct(item) }}%</span>
+              </td>
+              <td>
+                @if (isLow(item)) {
+                  <span class="badge badge-cancelled">Low Stock</span>
+                } @else {
+                  <span class="badge badge-dispatched">OK</span>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="8" class="empty">No inventory data.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

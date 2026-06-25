@@ -1,0 +1,51 @@
+services:
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "MarbleCraft@123"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'MarbleCraft@123' -C -Q 'SELECT 1' -b"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  api:
+    build:
+      context: .
+      dockerfile: src/MarbleCraftOMS.Api/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: >-
+        Server=sql;Database=MarbleCraftOMS;
+        User Id=sa;Password=MarbleCraft@123;
+        TrustServerCertificate=True;
+    depends_on:
+      sql:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  sqldata:
+
+# ── Quick start ────────────────────────────────────────────────────────────────
+#   docker compose up --build
+#
+# Swagger UI → http://localhost:8080/swagger
+#
+# Test credentials (seeded on first run):
+#   admin        / Admin@123   → role: Admin
+#   salesagent   / Sales@123   → role: SalesAgent
+#   distributor  / Dist@123    → role: Distributor  (customerId: 1)
+#
+# Auth flow:
+#   POST /api/v1/auth/login  { "username": "...", "password": "..." }
+#   Copy the token → Swagger Authorize → Bearer <token>
+# ──────────────────────────────────────────────────────────────────────────────

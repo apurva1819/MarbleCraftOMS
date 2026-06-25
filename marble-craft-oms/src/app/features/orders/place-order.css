@@ -1,0 +1,24 @@
+.lines-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+
+.line-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 160px 80px 120px 120px 36px;
+  gap: 10px; align-items: end;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.line-row:last-of-type { border-bottom: none; }
+
+.line-num { font-size: 12px; color: var(--text-2); padding-bottom: 8px; }
+
+label { font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: 4px; }
+.price-val { padding: 8px 0; font-size: 14px; font-variant-numeric: tabular-nums; }
+
+.remove-btn { padding: 6px 8px; }
+
+.grand-total {
+  text-align: right; padding-top: 14px;
+  font-size: 15px; color: var(--text-2);
+}
+.grand-total strong { color: var(--text); font-size: 18px; }
+
+.form-actions { display: flex; gap: 10px; }

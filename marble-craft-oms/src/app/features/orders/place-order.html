@@ -1,0 +1,87 @@
+<div class="page-header">
+  <h1>Place Order</h1>
+</div>
+
+@if (success()) {
+  <div class="alert alert-success">{{ success() }}</div>
+} @else {
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+  @if (error()) {
+    <div class="alert alert-error" style="margin-bottom:14px">{{ error() }}</div>
+  }
+
+  <!-- Line items -->
+  <div class="card" formArrayName="lines">
+    <div class="lines-header">
+      <strong>Order Lines</strong>
+      <button type="button" class="btn btn-ghost" (click)="addLine()">+ Add Line</button>
+    </div>
+
+    @for (line of lines.controls; track $index) {
+      <div [formGroupName]="$index" class="line-row">
+        <div class="line-num">{{ $index + 1 }}</div>
+
+        <div class="form-group line-product">
+          <label>Product</label>
+          <select formControlName="productId" (change)="onProductChange($index, $any($event.target).value)">
+            <option value="">Select product…</option>
+            @for (p of products(); track p.id) {
+              <option [value]="p.id">{{ p.name }} ({{ p.size }})</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group line-lot">
+          <label>Stock Lot</label>
+          <select formControlName="stockLotId">
+            <option value="">Select lot…</option>
+            @for (lot of lotsForLine($index); track lot.lotId) {
+              <option [value]="lot.lotId">{{ lot.lotNumber }} (avail: {{ lot.available }})</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group line-qty">
+          <label>Qty</label>
+          <input formControlName="quantity" type="number" min="1" />
+        </div>
+
+        <div class="line-price">
+          <label>Unit Price</label>
+          <div class="price-val">{{ line.get('unitPrice')?.value | currency:'INR':'symbol':'1.0-2' }}</div>
+        </div>
+
+        <div class="line-total">
+          <label>Total</label>
+          <div class="price-val">{{ lineTotal($index) | currency:'INR':'symbol':'1.0-2' }}</div>
+        </div>
+
+        @if (lines.length > 1) {
+          <button type="button" class="btn btn-ghost remove-btn" (click)="removeLine($index)">✕</button>
+        }
+      </div>
+    }
+
+    <div class="grand-total">
+      Grand Total: <strong>{{ grandTotal() | currency:'INR':'symbol':'1.0-2' }}</strong>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card mt-4">
+    <div class="form-group">
+      <label>Notes (optional)</label>
+      <textarea formControlName="notes" rows="2" placeholder="Delivery instructions, references…"></textarea>
+    </div>
+  </div>
+
+  <div class="form-actions mt-4">
+    <button type="submit" class="btn btn-primary" [disabled]="submitting() || form.invalid || lines.length === 0">
+      {{ submitting() ? 'Placing…' : 'Place Order' }}
+    </button>
+    <a routerLink="/orders" class="btn btn-ghost">Cancel</a>
+  </div>
+</form>
+
+}

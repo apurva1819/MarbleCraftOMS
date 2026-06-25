@@ -1,0 +1,70 @@
+<a routerLink="/orders" class="back-link">← Back to Orders</a>
+
+@if (loading()) {
+  <div class="empty mt-4">Loading…</div>
+} @else if (error()) {
+  <div class="alert alert-error mt-4">{{ error() }}</div>
+} @else if (order(); as o) {
+
+  <div class="page-header">
+    <div>
+      <h1>{{ o.orderNumber }}</h1>
+      <div class="order-meta">{{ o.customerName }} · {{ o.orderDate | date:'dd MMM yyyy' }}</div>
+    </div>
+    <div class="header-right">
+      <span [class]="statusClass(o.status)">{{ o.status }}</span>
+      @if (auth.isSalesOrAdmin()) {
+        <div class="actions">
+          @if (o.status === 'Pending') {
+            <button class="btn btn-success" (click)="confirm()">Confirm</button>
+          }
+          @if (o.status === 'Confirmed') {
+            <button class="btn btn-warning" (click)="dispatch()">Dispatch</button>
+          }
+          @if (o.status !== 'Dispatched' && o.status !== 'Cancelled') {
+            <button class="btn btn-danger" (click)="cancel()">Cancel</button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (o.notes) {
+    <div class="card notes-card">
+      <strong>Notes:</strong> {{ o.notes }}
+    </div>
+  }
+
+  <div class="card mt-4">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Lot</th>
+            <th class="text-right">Qty</th>
+            <th class="text-right">Unit Price</th>
+            <th class="text-right">Line Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of o.lines; track line.id) {
+            <tr>
+              <td>{{ line.productName }}</td>
+              <td>{{ line.lotNumber }}</td>
+              <td class="text-right">{{ line.quantity }}</td>
+              <td class="text-right">{{ line.unitPrice | currency:'INR':'symbol':'1.0-2' }}</td>
+              <td class="text-right">{{ line.lineTotal | currency:'INR':'symbol':'1.0-2' }}</td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" class="text-right total-label">Grand Total</td>
+            <td class="text-right total-val">{{ o.totalAmount | currency:'INR':'symbol':'1.0-2' }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+}

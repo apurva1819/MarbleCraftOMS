@@ -1,0 +1,33 @@
+<div class="page-header">
+  <h1>Notifications
+    @if (unread() > 0) {
+      <span class="unread-chip">{{ unread() }} unread</span>
+    }
+  </h1>
+  @if (unread() > 0) {
+    <button class="btn btn-ghost" (click)="markAllRead()">Mark all read</button>
+  }
+</div>
+
+<div class="notif-feed">
+  @if (loading()) {
+    <div class="empty">Loading…</div>
+  } @else {
+    @for (n of items(); track n.id) {
+      <div class="notif-card card" [class.unread-card]="!n.isRead" (click)="markRead(n)">
+        <div class="notif-icon">{{ typeIcon(n.type) }}</div>
+        <div class="notif-body-wrap">
+          <div class="notif-title-row">
+            <span class="notif-title">{{ n.title }}</span>
+            @if (!n.isRead) { <span class="dot"></span> }
+            <span class="notif-date">{{ n.createdAt | date:'dd MMM, HH:mm' }}</span>
+          </div>
+          <div class="notif-body">{{ n.body }}</div>
+          <div class="notif-type">{{ n.type }}</div>
+        </div>
+      </div>
+    } @empty {
+      <div class="empty">No notifications yet.</div>
+    }
+  }
+</div>

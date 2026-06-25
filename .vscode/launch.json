@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "MarbleCraft API (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/MarbleCraftOMS.Api/bin/Debug/net10.0/MarbleCraftOMS.Api.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/MarbleCraftOMS.Api",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "https://localhost:7001;http://localhost:5001"
+      },
+      "stopAtEntry": false,
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Attach to running MarbleCraft API",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickProcess}"
+    }
+  ]
+}

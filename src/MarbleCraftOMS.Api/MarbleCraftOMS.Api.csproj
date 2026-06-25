@@ -33,8 +33,9 @@
   </ItemGroup>
 
   <ItemGroup>
-  <ProjectReference Include="..\MarbleCraftOMS.Application\MarbleCraftOMS.Application.csproj" />
-  <ProjectReference Include="..\MarbleCraftOMS.Infrastructure\MarbleCraftOMS.Infrastructure.csproj" />
-</ItemGroup>
+    <ProjectReference Include="..\MarbleCraftOMS.Application\MarbleCraftOMS.Application.csproj" />
+    <ProjectReference Include="..\MarbleCraftOMS.BackgroundServices\MarbleCraftOMS.BackgroundServices.csproj" />
+    <ProjectReference Include="..\MarbleCraftOMS.Infrastructure\MarbleCraftOMS.Infrastructure.csproj" />
+  </ItemGroup>
 
 </Project>
