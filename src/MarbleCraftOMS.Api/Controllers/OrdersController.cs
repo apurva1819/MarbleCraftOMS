@@ -19,25 +19,10 @@ public class OrdersController(
     [EnableRateLimiting("fixed-write")]
     public async Task<IActionResult> Place([FromBody] PlaceOrderCommand cmd)
     {
-        try
-        {
-            var result = await orderService.PlaceAsync(cmd);
-            logger.LogInformation("Order placed — OrderNumber={OrderNumber} Customer={CustomerId}",
-                result.OrderNumber, cmd.CustomerId);
-            return CreatedAtAction(nameof(GetById), new { id = result.OrderId }, result);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await orderService.PlaceAsync(cmd);
+        logger.LogInformation("Order placed — OrderNumber={OrderNumber} Customer={CustomerId}",
+            result.OrderNumber, cmd.CustomerId);
+        return CreatedAtAction(nameof(GetById), new { id = result.OrderId }, result);
     }
 
     [HttpGet]
@@ -63,20 +48,9 @@ public class OrdersController(
     [EnableRateLimiting("fixed-write")]
     public async Task<IActionResult> Confirm(int id)
     {
-        try
-        {
-            await orderService.ConfirmAsync(id);
-            logger.LogInformation("Order confirmed — OrderId={OrderId}", id);
-            return NoContent();
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        await orderService.ConfirmAsync(id);
+        logger.LogInformation("Order confirmed — OrderId={OrderId}", id);
+        return NoContent();
     }
 
     [HttpPatch("{id:int}/dispatch")]
@@ -84,20 +58,9 @@ public class OrdersController(
     [EnableRateLimiting("fixed-write")]
     public async Task<IActionResult> Dispatch(int id)
     {
-        try
-        {
-            await orderService.DispatchAsync(id);
-            logger.LogInformation("Order dispatched — OrderId={OrderId}", id);
-            return NoContent();
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        await orderService.DispatchAsync(id);
+        logger.LogInformation("Order dispatched — OrderId={OrderId}", id);
+        return NoContent();
     }
 
     [HttpDelete("{id:int}")]
@@ -105,19 +68,8 @@ public class OrdersController(
     [EnableRateLimiting("fixed-write")]
     public async Task<IActionResult> Cancel(int id)
     {
-        try
-        {
-            await orderService.CancelAsync(id);
-            logger.LogInformation("Order cancelled — OrderId={OrderId}", id);
-            return NoContent();
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        await orderService.CancelAsync(id);
+        logger.LogInformation("Order cancelled — OrderId={OrderId}", id);
+        return NoContent();
     }
 }

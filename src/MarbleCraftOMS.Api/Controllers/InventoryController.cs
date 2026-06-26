@@ -37,23 +37,16 @@ public class InventoryController(
     [EnableRateLimiting("fixed-write")]
     public async Task<IActionResult> Adjust(AdjustStockCommand cmd)
     {
-        try
-        {
-            var result = await inventoryService.AdjustAsync(cmd);
-            if (result is null)
-                return NotFound(new { message = $"Stock lot {cmd.StockLotId} not found." });
+        var result = await inventoryService.AdjustAsync(cmd);
+        if (result is null)
+            return NotFound(new { message = $"Stock lot {cmd.StockLotId} not found." });
 
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                         ?? User.Identity?.Name ?? "unknown";
-            logger.LogInformation(
-                "Inventory adjusted — Lot={LotNumber} Type={Type} Qty={Qty} Reason={Reason} User={UserId}",
-                result.LotNumber, cmd.Type, cmd.Quantity, cmd.Reason, userId);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? User.Identity?.Name ?? "unknown";
+        logger.LogInformation(
+            "Inventory adjusted — Lot={LotNumber} Type={Type} Qty={Qty} Reason={Reason} User={UserId}",
+            result.LotNumber, cmd.Type, cmd.Quantity, cmd.Reason, userId);
 
-            return Ok(result);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return UnprocessableEntity(new { message = ex.Message });
-        }
+        return Ok(result);
     }
 }

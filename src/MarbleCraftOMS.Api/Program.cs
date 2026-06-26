@@ -225,6 +225,8 @@ builder.Services.AddApiVersioning(options =>
     options.SubstituteApiVersionInUrl = true;
 });
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -240,6 +242,7 @@ using (var scope = app.Services.CreateScope())
     await DbInitializer.SeedAsync(db);
 }
 
+app.UseExceptionHandler();
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {

@@ -36,15 +36,8 @@ public class ProductsController(IProductService productService) : ControllerBase
     [EnableRateLimiting("fixed-write")]
     public async Task<IActionResult> Add(AddProductCommand cmd)
     {
-        try
-        {
-            var product = await productService.AddAsync(cmd);
-            return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
-        }
-        catch (ArgumentException ex)
-        {
-            return UnprocessableEntity(new { message = ex.Message });
-        }
+        var product = await productService.AddAsync(cmd);
+        return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
     }
 
     [HttpPut("{id}")]
@@ -52,15 +45,8 @@ public class ProductsController(IProductService productService) : ControllerBase
     [EnableRateLimiting("fixed-write")]
     public async Task<IActionResult> Update(int id, UpdateProductCommand cmd)
     {
-        try
-        {
-            var updated = await productService.UpdateAsync(id, cmd);
-            return updated ? NoContent() : NotFound();
-        }
-        catch (ArgumentException ex)
-        {
-            return UnprocessableEntity(new { message = ex.Message });
-        }
+        var updated = await productService.UpdateAsync(id, cmd);
+        return updated ? NoContent() : NotFound();
     }
 
     [HttpDelete("{id}")]
