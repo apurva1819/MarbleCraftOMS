@@ -66,12 +66,12 @@ services:
         windows:
           shell: pwsh
           run: |
-            Push-Location marble-craft-oms
+            Push-Location ../../marble-craft-oms
             npm ci
             npx ng build --configuration production
             Pop-Location
-            New-Item -ItemType Directory -Force -Path src/MarbleCraftOMS.Api/wwwroot | Out-Null
-            Copy-Item -Recurse -Force marble-craft-oms/dist/marble-craft-oms/browser/* src/MarbleCraftOMS.Api/wwwroot/
+            New-Item -ItemType Directory -Force -Path wwwroot | Out-Null
+            Copy-Item -Recurse -Force ../../marble-craft-oms/dist/marble-craft-oms/browser/* wwwroot/
     docker:
       path: src/MarbleCraftOMS.Api/Dockerfile
       registry: mcacr32fa.azurecr.io
