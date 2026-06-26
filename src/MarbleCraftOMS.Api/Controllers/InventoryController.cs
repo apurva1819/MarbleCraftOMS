@@ -33,7 +33,7 @@ public class InventoryController(
     }
 
     [HttpPost("adjust")]
-    [Authorize(Policy = "SalesAccess")]
+    [Authorize(Policy = "WarehouseAccess")]
     [EnableRateLimiting("fixed-write")]
     public async Task<IActionResult> Adjust(AdjustStockCommand cmd)
     {
