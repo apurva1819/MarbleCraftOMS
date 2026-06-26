@@ -63,4 +63,5 @@ services:
     host: containerapp
     docker:
       path: src/MarbleCraftOMS.Api/Dockerfile
+      context: .
       registry: mcacr32fa.azurecr.io

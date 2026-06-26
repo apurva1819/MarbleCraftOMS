@@ -248,6 +248,9 @@ using (var scope = app.Services.CreateScope())
     await DbInitializer.SeedAsync(db);
 }
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseExceptionHandler();
 app.UseSwagger();
 app.UseSwaggerUI(options =>
@@ -261,5 +264,6 @@ app.UseAuthentication();
 app.UseMiddleware<AuditMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
+app.MapFallbackToFile("index.html");
 
 app.Run();
