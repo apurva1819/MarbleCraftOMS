@@ -1,3 +1,4 @@
+using MarbleCraftOMS.Core.Entities;
 using MarbleCraftOMS.Core.Interfaces;
 
 namespace MarbleCraftOMS.Application.Inventory;
@@ -38,7 +39,7 @@ public class InventoryService(
         if (cmd.QuantityOnHand <= 0)
             throw new ArgumentException("Quantity must be positive.", nameof(cmd.QuantityOnHand));
 
-        var lot = new Core.Entities.StockLot
+        var lot = new StockLot
         {
             ProductId      = cmd.ProductId,
             SupplierId     = cmd.SupplierId,
