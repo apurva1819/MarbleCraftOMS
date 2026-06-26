@@ -20,6 +20,15 @@ MarbleCraftOMS is a full-stack, role-based B2B Order Management System for a mar
 
 ---
 
+## Links
+
+| | URL |
+|---|---|
+| **Live API** | https://marblecraft-dev-api.livelycoast-9aad040b.eastasia.azurecontainerapps.io/ |
+| **Demo recording** | https://drive.google.com/file/d/1OmJysXl4sOIvODbTumO2Fn_v1kj2nyiY/view?usp=drive_link |
+
+---
+
 ## Live Demo
 
 The screen recording walks through the full order lifecycle:
