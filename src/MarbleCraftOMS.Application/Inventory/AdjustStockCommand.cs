@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace MarbleCraftOMS.Application.Inventory;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum AdjustmentType { Commit, Release }
+public enum AdjustmentType { Commit, Release, Receive, WriteOff }
 
 public class AdjustStockCommand
 {

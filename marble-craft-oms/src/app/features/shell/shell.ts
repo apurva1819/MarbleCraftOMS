@@ -28,7 +28,11 @@ export class ShellComponent implements OnInit {
     this.notifSvc.getAll().subscribe(n => this.notifications.set(n));
   }
 
-  toggleNotifPanel() { this.showNotifPanel.update(v => !v); }
+  toggleNotifPanel() {
+    const opening = !this.showNotifPanel();
+    this.showNotifPanel.set(opening);
+    if (opening) this.loadNotifications();
+  }
 
   markRead(n: NotificationItem) {
     if (n.isRead) return;

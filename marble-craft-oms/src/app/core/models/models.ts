@@ -6,8 +6,9 @@ export interface LoginResponse {
 
 export interface JwtPayload {
   sub: string;
+  'unique_name'?: string;
   role: string;
-  distributorId?: number;
+  distributorId?: string | number;
   exp: number;
 }
 
@@ -127,4 +128,37 @@ export interface NotificationItem {
   body: string;
   isRead: boolean;
   createdAt: string;
+}
+
+export type AdjustmentType = 'Commit' | 'Release' | 'Receive' | 'WriteOff';
+
+export interface AdjustStockCommand {
+  stockLotId: number;
+  quantity: number;
+  type: AdjustmentType;
+  reason: string;
+}
+
+export interface AdjustStockResult {
+  lotNumber: string;
+  quantityOnHand: number;
+  quantityCommitted: number;
+  quantityAvailable: number;
+}
+
+export interface AddProductCommand {
+  name: string;
+  material: string;
+  format: string;
+  surface: string;
+  color: string;
+  size: string;
+  countryOfOrigin: string;
+  pricePerUnit: number;
+  supplierId: number;
+}
+
+export interface SupplierItem {
+  id: number;
+  name: string;
 }

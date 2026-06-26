@@ -34,7 +34,7 @@ export class LoginComponent {
     this.auth.login(username, password).subscribe({
       next: () => {
         const role = this.auth.role();
-        const dest = (role === 'Admin' || role === 'SalesAgent') ? '/inventory' : '/catalogue';
+        const dest = (role === 'Admin' || role === 'SalesAgent' || role === 'WarehouseStaff') ? '/inventory' : '/catalogue';
         this.router.navigate([dest]);
       },
       error: () => {

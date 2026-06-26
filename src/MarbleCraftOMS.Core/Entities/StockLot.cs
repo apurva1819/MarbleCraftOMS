@@ -38,4 +38,21 @@ public class StockLot
 
         QuantityCommitted -= quantity;
     }
+
+    public void ReceiveStock(int quantity)
+    {
+        if (quantity <= 0)
+            throw new ArgumentException("Quantity must be positive.", nameof(quantity));
+        QuantityOnHand += quantity;
+    }
+
+    public void WriteOff(int quantity)
+    {
+        if (quantity <= 0)
+            throw new ArgumentException("Quantity must be positive.", nameof(quantity));
+        if (quantity > QuantityAvailable)
+            throw new InvalidOperationException(
+                $"Cannot write off {quantity} — only {QuantityAvailable} uncommitted units available in lot {LotNumber}.");
+        QuantityOnHand -= quantity;
+    }
 }

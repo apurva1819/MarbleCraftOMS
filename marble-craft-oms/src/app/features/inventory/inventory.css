@@ -1,11 +1,52 @@
 .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 0; }
-.stat-card { text-align: center; padding: 16px; }
-.stat-label { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
-.stat-value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat-card {
+  text-align: center; padding: 20px 16px;
+  border-top: 3px solid var(--gold);
+  background: linear-gradient(160deg, #fff 0%, var(--marble-cream) 100%);
+}
+.stat-label { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; font-weight: 600; }
+.stat-value { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--navy); font-family: 'Playfair Display', Georgia, serif; }
 
 .progress-wrap { height: 6px; background: var(--border); border-radius: 3px; width: 80px; display: inline-block; overflow: hidden; vertical-align: middle; margin-right: 6px; }
 .progress-bar { height: 100%; background: var(--accent); border-radius: 3px; transition: width .3s; }
 .bar-high { background: var(--danger); }
 .pct-label { font-size: 12px; color: var(--text-2); }
 
-.row-low td { background: #fff5f5 !important; }
+.row-low td { background: #fff8f8 !important; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+/* Modal */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 200;
+}
+.modal-box {
+  position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 480px; max-width: calc(100vw - 32px);
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+  z-index: 201;
+  overflow: hidden;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px; font-weight: 600;
+}
+.modal-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 14px; color: var(--text-2); padding: 2px 6px;
+  border-radius: 4px;
+}
+.modal-close:hover { background: var(--bg); color: var(--text); }
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.modal-footer {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+}
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }

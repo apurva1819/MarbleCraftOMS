@@ -68,10 +68,14 @@ public class InventoryService(
         var lot = await repo.GetLotAsync(cmd.StockLotId);
         if (lot is null) return null;
 
-        if (cmd.Type == AdjustmentType.Commit)
-            lot.CommitStock(cmd.Quantity);
-        else
-            lot.ReleaseStock(cmd.Quantity);
+        switch (cmd.Type)
+        {
+            case AdjustmentType.Commit:   lot.CommitStock(cmd.Quantity);  break;
+            case AdjustmentType.Release:  lot.ReleaseStock(cmd.Quantity); break;
+            case AdjustmentType.Receive:  lot.ReceiveStock(cmd.Quantity); break;
+            case AdjustmentType.WriteOff: lot.WriteOff(cmd.Quantity);     break;
+            default: throw new ArgumentException($"Unknown adjustment type: {cmd.Type}");
+        }
 
         await repo.SaveAsync();
 

@@ -89,7 +89,7 @@ export class PlaceOrderComponent implements OnInit {
     this.error.set('');
 
     const cmd = {
-      customerId: this.auth.distributorId() ?? 0,
+      customerId: +(this.auth.distributorId() ?? 0),
       notes: this.form.value.notes ?? '',
       lines: this.lines.controls.map(l => ({
         productId:  +l.get('productId')!.value,
@@ -104,8 +104,8 @@ export class PlaceOrderComponent implements OnInit {
         this.success.set(`Order ${res.orderNumber} placed!`);
         setTimeout(() => this.router.navigate(['/orders']), 1500);
       },
-      error: () => {
-        this.error.set('Failed to place order. Check stock availability.');
+      error: (err) => {
+        this.error.set(err?.error?.detail || err?.error?.message || 'Failed to place order. Check stock availability.');
         this.submitting.set(false);
       }
     });

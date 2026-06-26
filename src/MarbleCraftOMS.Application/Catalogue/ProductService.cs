@@ -10,16 +10,8 @@ public class ProductService(
     IProductBrowseQuery browseQuery,
     ICache<PagedResult<ProductBrowseItem>> cache) : IProductService
 {
-    public async Task<PagedResult<ProductBrowseItem>> BrowseAsync(int page, int pageSize)
-    {
-        var cacheKey = $"products:p={page}:ps={pageSize}";
-        if (cache.TryGet(cacheKey, out var cached))
-            return cached!;
-
-        var result = await browseQuery.BrowseAsync(page, pageSize);
-        cache.Set(cacheKey, result, TimeSpan.FromMinutes(5));
-        return result;
-    }
+    public Task<PagedResult<ProductBrowseItem>> BrowseAsync(int page, int pageSize)
+        => browseQuery.BrowseAsync(page, pageSize);
 
     public Task<Product?> GetByIdAsync(int id) => repo.GetByIdAsync(id);
 

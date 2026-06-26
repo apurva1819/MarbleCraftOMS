@@ -15,6 +15,7 @@ export class OrderDetailComponent implements OnInit {
   order   = signal<OrderDetail | null>(null);
   loading = signal(true);
   error   = signal('');
+  actionError = signal('');
 
   constructor(
     public auth: AuthService,
@@ -31,16 +32,28 @@ export class OrderDetailComponent implements OnInit {
   }
 
   confirm() {
-    this.orderSvc.confirm(this.order()!.id).subscribe(() => this.reload());
+    this.actionError.set('');
+    this.orderSvc.confirm(this.order()!.id).subscribe({
+      next: () => this.reload(),
+      error: (err) => this.actionError.set(err?.error?.detail || err?.error?.message || 'Failed to confirm order.')
+    });
   }
 
   dispatch() {
-    this.orderSvc.dispatch(this.order()!.id).subscribe(() => this.reload());
+    this.actionError.set('');
+    this.orderSvc.dispatch(this.order()!.id).subscribe({
+      next: () => this.reload(),
+      error: (err) => this.actionError.set(err?.error?.detail || err?.error?.message || 'Failed to dispatch order.')
+    });
   }
 
   cancel() {
     if (!confirm('Cancel this order?')) return;
-    this.orderSvc.cancel(this.order()!.id).subscribe(() => this.reload());
+    this.actionError.set('');
+    this.orderSvc.cancel(this.order()!.id).subscribe({
+      next: () => this.reload(),
+      error: (err) => this.actionError.set(err?.error?.detail || err?.error?.message || 'Failed to cancel order.')
+    });
   }
 
   private reload() {
@@ -48,5 +61,19 @@ export class OrderDetailComponent implements OnInit {
     this.orderSvc.getById(id).subscribe(o => this.order.set(o));
   }
 
-  statusClass(status: string) { return `badge badge-${status.toLowerCase()}`; }
+  private readonly LABELS = ['Pending', 'Confirmed', 'Dispatched', 'Cancelled'];
+
+  toLabel(s: string | number): string {
+    return typeof s === 'number' ? (this.LABELS[s] ?? 'Unknown') : String(s);
+  }
+
+  statusClass(s: string | number): string {
+    return `badge badge-${this.toLabel(s).toLowerCase()}`;
+  }
+
+  isPending(s: string | number): boolean     { return s === 'Pending'   || s === 0; }
+  isConfirmed(s: string | number): boolean   { return s === 'Confirmed' || s === 1; }
+  isNonTerminal(s: string | number): boolean {
+    return s !== 'Dispatched' && s !== 2 && s !== 'Cancelled' && s !== 3;
+  }
 }

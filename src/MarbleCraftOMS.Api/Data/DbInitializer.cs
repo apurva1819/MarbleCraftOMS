@@ -9,33 +9,25 @@ public static class DbInitializer
 {
     public static async Task SeedAsync(AppDbContext db)
     {
-        if (await db.Users.AnyAsync()) return;
-
-        db.Users.AddRange(
-            new AppUser
-            {
-                Username = "admin",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-                Role = Roles.Admin,
-                CreatedAt = DateTime.UtcNow
-            },
-            new AppUser
-            {
-                Username = "salesagent",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Sales@123"),
-                Role = Roles.SalesAgent,
-                CreatedAt = DateTime.UtcNow
-            },
-            new AppUser
-            {
-                Username = "distributor",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Dist@123"),
-                Role = Roles.Distributor,
-                DistributorId = 1,
-                CreatedAt = DateTime.UtcNow
-            }
-        );
-
+        await EnsureUser(db, "admin",          "Admin@123",  Roles.Admin);
+        await EnsureUser(db, "salesagent",     "Sales@123",  Roles.SalesAgent);
+        await EnsureUser(db, "distributor",    "Dist@123",   Roles.Distributor, distributorId: 1);
+        await EnsureUser(db, "warehousestaff", "Wh@123",     Roles.WarehouseStaff);
         await db.SaveChangesAsync();
+    }
+
+    private static async Task EnsureUser(
+        AppDbContext db, string username, string password, string role, int? distributorId = null)
+    {
+        if (await db.Users.AnyAsync(u => u.Username == username)) return;
+
+        db.Users.Add(new AppUser
+        {
+            Username      = username,
+            PasswordHash  = BCrypt.Net.BCrypt.HashPassword(password),
+            Role          = role,
+            DistributorId = distributorId,
+            CreatedAt     = DateTime.UtcNow
+        });
     }
 }

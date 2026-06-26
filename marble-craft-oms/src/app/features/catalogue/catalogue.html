@@ -1,6 +1,19 @@
 <div class="page-header">
-  <h1>Product Catalogue</h1>
-  <span class="count-badge">{{ totalCount() }} products</span>
+  <div style="display:flex;align-items:center;gap:10px">
+    <h1>Product Catalogue</h1>
+    <span class="count-badge">{{ totalCount() }} products</span>
+  </div>
+  @if (auth.isSalesOrAdmin()) {
+    <button class="btn btn-primary" (click)="openAddModal()">+ Add Product</button>
+  }
+</div>
+
+<div class="catalogue-hero">
+  <div class="catalogue-hero-icon">&#9670;</div>
+  <div class="catalogue-hero-text">
+    <h2>Premium Marble & Natural Stone</h2>
+    <p>Sourced from the finest quarries — browse slabs, tiles &amp; custom cuts</p>
+  </div>
 </div>
 
 <div class="card">
@@ -27,8 +40,17 @@
           @for (p of products(); track p.id) {
             <tr>
               <td>
-                <div class="product-name">{{ p.name }}</div>
-                <div class="product-format">{{ p.format }}</div>
+                <div class="product-cell">
+                  <span class="marble-swatch" [class]="'swatch-' + (p.color | lowercase | slice:0:5)"></span>
+                  <div>
+                    @if (auth.isDistributor()) {
+                      <a [routerLink]="['/orders/new']" [queryParams]="{productId: p.id}" class="product-name product-link">{{ p.name }}</a>
+                    } @else {
+                      <div class="product-name">{{ p.name }}</div>
+                    }
+                    <div class="product-format">{{ p.format }}</div>
+                  </div>
+                </div>
               </td>
               <td>{{ p.material }}</td>
               <td>{{ p.size }}</td>
@@ -37,13 +59,18 @@
               <td>{{ p.countryOfOrigin }}</td>
               <td>{{ p.supplierName }}</td>
               <td class="text-right">{{ p.pricePerUnit | currency:'INR':'symbol':'1.0-2' }}</td>
-              <td class="text-right" [class.low-stock]="p.quantityAvailable <= 50">
-                {{ p.quantityAvailable }}
+              <td class="text-right">
+                <div class="stock-cell">
+                  <span class="stock-dot" [class.low]="p.quantityAvailable <= 50"></span>
+                  <span [class.low-stock]="p.quantityAvailable <= 50">{{ p.quantityAvailable }}</span>
+                </div>
               </td>
               <td>
-                <a [routerLink]="['/orders/new']" [queryParams]="{productId: p.id}" class="btn btn-primary btn-sm">
-                  Order
-                </a>
+                @if (auth.isDistributor()) {
+                  <a [routerLink]="['/orders/new']" [queryParams]="{productId: p.id}" class="btn btn-primary btn-sm">
+                    Order
+                  </a>
+                }
               </td>
             </tr>
           } @empty {
@@ -60,3 +87,78 @@
     </div>
   }
 </div>
+
+<!-- Add Product Modal -->
+@if (showModal()) {
+  <div class="modal-backdrop" (click)="closeModal()"></div>
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>Add New Product</span>
+      <button class="modal-close" (click)="closeModal()">✕</button>
+    </div>
+
+    <form [formGroup]="addForm" (ngSubmit)="submitAdd()" class="modal-body">
+      @if (modalError()) {
+        <div class="alert alert-error">{{ modalError() }}</div>
+      }
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Product Name</label>
+          <input type="text" formControlName="name" placeholder="e.g. Statuario White 60×60" />
+        </div>
+        <div class="form-group">
+          <label>Material</label>
+          <input type="text" formControlName="material" placeholder="e.g. Marble" />
+        </div>
+      </div>
+
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>Format</label>
+          <input type="text" formControlName="format" placeholder="e.g. Tile" />
+        </div>
+        <div class="form-group">
+          <label>Surface</label>
+          <input type="text" formControlName="surface" placeholder="e.g. Polished" />
+        </div>
+        <div class="form-group">
+          <label>Color</label>
+          <input type="text" formControlName="color" placeholder="e.g. White" />
+        </div>
+      </div>
+
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>Size</label>
+          <input type="text" formControlName="size" placeholder="e.g. 60×60 cm" />
+        </div>
+        <div class="form-group">
+          <label>Country of Origin</label>
+          <input type="text" formControlName="countryOfOrigin" placeholder="e.g. Italy" />
+        </div>
+        <div class="form-group">
+          <label>Price / unit (₹)</label>
+          <input type="number" formControlName="pricePerUnit" placeholder="0.00" min="0.01" step="0.01" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Supplier</label>
+        <select formControlName="supplierId">
+          <option value="">— select supplier —</option>
+          @for (s of suppliers(); track s.id) {
+            <option [value]="s.id">{{ s.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" (click)="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="addForm.invalid || modalLoading()">
+          {{ modalLoading() ? 'Saving…' : 'Add Product' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}

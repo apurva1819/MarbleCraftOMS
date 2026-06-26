@@ -12,9 +12,12 @@ import { OrderSummary } from '../../core/models/models';
   styleUrl: './order-list.css'
 })
 export class OrderListComponent implements OnInit {
-  orders = signal<OrderSummary[]>([]);
-  loading = signal(true);
+  orders      = signal<OrderSummary[]>([]);
+  loading     = signal(true);
   actionError = signal('');
+
+  // Backend may return numeric enum (0=Pending,1=Confirmed,2=Dispatched,3=Cancelled)
+  private readonly LABELS = ['Pending', 'Confirmed', 'Dispatched', 'Cancelled'];
 
   constructor(public auth: AuthService, private orderSvc: OrderService) {}
 
@@ -31,27 +34,37 @@ export class OrderListComponent implements OnInit {
 
   confirm(order: OrderSummary) {
     this.orderSvc.confirm(order.id).subscribe({
-      next: () => this.load(),
-      error: () => this.actionError.set('Failed to confirm order.')
+      next:  () => this.load(),
+      error: (err) => this.actionError.set(err?.error?.detail || err?.error?.message || 'Failed to confirm order.')
     });
   }
 
   dispatch(order: OrderSummary) {
     this.orderSvc.dispatch(order.id).subscribe({
-      next: () => this.load(),
-      error: () => this.actionError.set('Failed to dispatch order.')
+      next:  () => this.load(),
+      error: (err) => this.actionError.set(err?.error?.detail || err?.error?.message || 'Failed to dispatch order.')
     });
   }
 
   cancel(order: OrderSummary) {
     if (!confirm(`Cancel order ${order.orderNumber}?`)) return;
     this.orderSvc.cancel(order.id).subscribe({
-      next: () => this.load(),
-      error: () => this.actionError.set('Failed to cancel order.')
+      next:  () => this.load(),
+      error: (err) => this.actionError.set(err?.error?.detail || err?.error?.message || 'Failed to cancel order.')
     });
   }
 
-  statusClass(status: string): string {
-    return `badge badge-${status.toLowerCase()}`;
+  toLabel(s: string | number): string {
+    return typeof s === 'number' ? (this.LABELS[s] ?? 'Unknown') : String(s);
+  }
+
+  statusClass(s: string | number): string {
+    return `badge badge-${this.toLabel(s).toLowerCase()}`;
+  }
+
+  isPending(s: string | number): boolean    { return s === 'Pending'    || s === 0; }
+  isConfirmed(s: string | number): boolean  { return s === 'Confirmed'  || s === 1; }
+  isNonTerminal(s: string | number): boolean {
+    return s !== 'Dispatched' && s !== 2 && s !== 'Cancelled' && s !== 3;
   }
 }

@@ -38,6 +38,9 @@
             <th>Lots</th>
             <th>Utilization</th>
             <th>Status</th>
+            @if (auth.canAdjustStock()) {
+              <th></th>
+            }
           </tr>
         </thead>
         <tbody>
@@ -62,12 +65,79 @@
                   <span class="badge badge-dispatched">OK</span>
                 }
               </td>
+              @if (auth.canAdjustStock()) {
+                <td>
+                  <button class="btn btn-ghost btn-sm" (click)="openAdjust(item)">Adjust</button>
+                </td>
+              }
             </tr>
           } @empty {
-            <tr><td colspan="8" class="empty">No inventory data.</td></tr>
+            <tr><td colspan="9" class="empty">No inventory data.</td></tr>
           }
         </tbody>
       </table>
     </div>
+  </div>
+}
+
+<!-- Adjust Stock Modal -->
+@if (showModal()) {
+  <div class="modal-backdrop" (click)="closeModal()"></div>
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>Adjust Stock — {{ modalItem()?.productName }}</span>
+      <button class="modal-close" (click)="closeModal()">✕</button>
+    </div>
+
+    @if (modalSuccess()) {
+      <div class="alert alert-success mt-4">{{ modalSuccess() }}</div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="closeModal()">Close</button>
+      </div>
+    } @else {
+      <form [formGroup]="adjustForm" (ngSubmit)="submitAdjust()" class="modal-body">
+        @if (modalError()) {
+          <div class="alert alert-error">{{ modalError() }}</div>
+        }
+
+        <div class="form-group">
+          <label>Stock Lot</label>
+          <select formControlName="stockLotId">
+            <option value="">— select lot —</option>
+            @for (lot of modalLots(); track lot.lotId) {
+              <option [value]="lot.lotId">
+                {{ lot.lotNumber }} · Available: {{ lot.available }} · On Hand: {{ lot.onHand }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Adjustment Type</label>
+            <select formControlName="type">
+              <option value="Receive">Receive Stock (add to on-hand)</option>
+              <option value="WriteOff">Write Off (remove from on-hand)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Quantity</label>
+            <input type="number" formControlName="quantity" min="1" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Reason</label>
+          <input type="text" formControlName="reason" placeholder="e.g. Stock receipt, Manual correction…" />
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="adjustForm.invalid || modalLoading()">
+            {{ modalLoading() ? 'Saving…' : 'Save Adjustment' }}
+          </button>
+        </div>
+      </form>
+    }
   </div>
 }
