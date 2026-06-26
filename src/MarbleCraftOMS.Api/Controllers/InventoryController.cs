@@ -32,6 +32,15 @@ public class InventoryController(
         return Ok(items);
     }
 
+    [HttpPost("lots")]
+    [Authorize(Policy = "WarehouseAccess")]
+    [EnableRateLimiting("fixed-write")]
+    public async Task<IActionResult> CreateLot(CreateStockLotCommand cmd)
+    {
+        var result = await inventoryService.CreateLotAsync(cmd);
+        return CreatedAtAction(nameof(GetBySku), new { sku = cmd.ProductId }, result);
+    }
+
     [HttpPost("adjust")]
     [Authorize(Policy = "WarehouseAccess")]
     [EnableRateLimiting("fixed-write")]

@@ -33,6 +33,35 @@ public class InventoryService(
 
     public Task<List<StockSummaryItem>> GetSummaryAsync() => summaryQuery.GetSummaryAsync();
 
+    public async Task<StockLotDetail> CreateLotAsync(CreateStockLotCommand cmd)
+    {
+        if (cmd.QuantityOnHand <= 0)
+            throw new ArgumentException("Quantity must be positive.", nameof(cmd.QuantityOnHand));
+
+        var lot = new Core.Entities.StockLot
+        {
+            ProductId      = cmd.ProductId,
+            SupplierId     = cmd.SupplierId,
+            LotNumber      = cmd.LotNumber,
+            QuantityOnHand = cmd.QuantityOnHand,
+            UnitCostPerSqm = cmd.UnitCostPerSqm,
+            ReceivedDate   = cmd.ReceivedDate
+        };
+
+        await repo.AddLotAsync(lot);
+
+        return new StockLotDetail
+        {
+            LotId          = lot.Id,
+            LotNumber      = lot.LotNumber,
+            OnHand         = lot.QuantityOnHand,
+            Committed      = lot.QuantityCommitted,
+            Available      = lot.QuantityAvailable,
+            UnitCostPerSqm = lot.UnitCostPerSqm,
+            ReceivedDate   = lot.ReceivedDate
+        };
+    }
+
     public async Task<AdjustStockResult?> AdjustAsync(AdjustStockCommand cmd)
     {
         var lot = await repo.GetLotAsync(cmd.StockLotId);
