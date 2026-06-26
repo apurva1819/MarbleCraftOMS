@@ -66,8 +66,8 @@ services:
         windows:
           shell: pwsh
           run: |
+            if (-not (Test-Path "../../marble-craft-oms/node_modules")) { npm --prefix ../../marble-craft-oms install }
             Push-Location ../../marble-craft-oms
-            npm ci
             npx ng build --configuration production
             Pop-Location
             New-Item -ItemType Directory -Force -Path wwwroot | Out-Null
