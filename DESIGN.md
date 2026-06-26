@@ -1,4 +1,4 @@
-# MarbleCraft OMS — Day 22 Design Document
+# MarbleCraft OMS — Design Document
 
 ## What Are We Building
 
@@ -17,13 +17,14 @@ confirm allocations, and get alerted when inventory runs low.
 
 ---
 
-## Two Users
+## System Roles
 
-| User | Role |
-|------|------|
-| **Sales Manager** | MarbleCraft staff — manages products, reviews orders, allocates stock, monitors inventory |
-| **Distributor** | External buyer — browses available tiles, places bulk orders, tracks order status |
-
+| Role | Description |
+|------|-------------|
+| **Admin** | Full system access, user management, configuration |
+| **SalesAgent** | Manages orders: confirm, dispatch; manages products and suppliers |
+| **WarehouseStaff** | Adjusts lot stock, monitors inventory quantities |
+| **Distributor** | Browses catalogue, places and tracks own orders |
 
 ---
 
@@ -31,37 +32,54 @@ confirm allocations, and get alerted when inventory runs low.
 
 ### 1. Identity
 Handles who can log in and what they are allowed to do.
-- Sales Manager logs in with a staff account
-- Distributor logs in with a distributor account
-- JWT issued on login, role embedded in claims
+- Local JWT (HMAC-SHA256) for dev/demo; Azure Entra ID for production
+- Role embedded in JWT claims: Admin, SalesAgent, WarehouseStaff, Distributor
+- Policy scheme routes to correct validator based on token issuer
 - No guest access — everything requires login
 
 ### 2. Catalogue
 Manages the tile product master.
-- Sales Manager adds and updates products (SKU, name, collection, size, finish, material, origin)
+- SalesAgent adds and updates products (SKU, name, collection, size, finish, material, origin)
 - Distributors browse the catalogue and see available stock per SKU
-- Read-heavy — Dapper on the browse endpoint
+- Read-heavy — Dapper with raw SQL on the browse endpoint; IMemoryCache 5-min TTL
 
 ### 3. Inventory
-Tracks stock across warehouses.
-- Each SKU has a stock count per warehouse
-- Stock has two states: **Available** and **Committed**
-- When an order is placed, stock moves from Available to Committed
-- When an order is confirmed and dispatched, Committed stock is consumed
-- Sales Manager can see total available, total committed, and total on-hand per SKU
+Tracks stock at lot level — not just SKU level.
+- Each SKU has one or more StockLots (quarry batch lots with a LotNumber)
+- Stock has two states per lot: **Available** (OnHand − Committed) and **Committed**
+- When an order is placed, stock commits immediately from the selected lot
+- WarehouseStaff adjusts lot stock; every adjustment is audit-logged
+- SalesAgent and Admin can view stock summary and lot detail
 
 ### 4. Orders
 The core of the system.
-- Distributor places an order (one or more SKUs with quantities)
-- Sales Manager reviews, allocates stock, confirms
-- Order moves through a status lifecycle
-- Sales Manager can reject an order if stock is insufficient
+- Distributor places an order (one or more lines, each tied to a specific StockLot)
+- Stock is committed atomically at placement — no race conditions, no overselling
+- Order moves through a strict state machine enforced by domain entity guard clauses
+- SalesAgent confirms and dispatches; cancellation releases committed stock immediately
 
 ### 5. Notifications
 Async, background-driven alerts.
-- Fires when stock falls below a defined threshold
-- Fires when an order status changes
-- Consumed by Sales Manager and Distributor respectively
+- Fires when stock falls below a defined threshold (LowStockMonitor, every 5 minutes)
+- Fires when an order status changes (OrderStatusChangedEvent)
+- Consumed by a background NotificationConsumer writing to the Notifications table
+- Distributor and Admin poll GET /notifications; mark read via PATCH
+
+### 6. Suppliers
+Manages the supplier master.
+- Full CRUD — AdminOnly on writes
+- Suppliers are linked to Products and StockLots
+
+### 7. Customers
+Manages distributor accounts.
+- Full CRUD — AdminOnly on writes
+- Customers are linked to DistributorOrders and AppUsers (via DistributorId)
+
+### 8. Users
+Admin-only user management.
+- Create, update, delete system users
+- Passwords hashed with BCrypt (work factor 12); PasswordHash never exposed via API
+- Role assignment validated against the four known roles
 
 ---
 
@@ -72,24 +90,28 @@ Async, background-driven alerts.
 ```
 DistributorOrder
 ├── OrderId
-├── Distributor (who placed it)
+├── CustomerId (Distributor who placed it)
 ├── OrderLines[]
-│     ├── SKU
-│     ├── RequestedQuantity
-│     ├── AllocatedQuantity
+│     ├── ProductId
+│     ├── StockLotId          ← lot-level, not just SKU-level
+│     ├── Quantity
 │     └── UnitPrice
 ├── Status
-│     Pending → Allocated → Confirmed → Dispatched → Delivered
-├── PlacedAt
-├── ConfirmedAt
+│     Pending → Confirmed → Dispatched
+│          ↓
+│       Cancelled (from Pending or Confirmed only)
+├── OrderDate
+├── CreatedAt
 └── Notes
 ```
 
-**Business rules inside the aggregate:**
-- An order cannot be confirmed unless every line has allocated quantity > 0
-- Allocated quantity cannot exceed available stock at time of allocation
-- Once Dispatched, the order cannot be modified
-- Cancellation is only allowed in Pending or Allocated status
+**Business rules inside the aggregate (guard clauses on the entity):**
+- Stock is committed at placement — not at confirmation
+- Cannot confirm an order that is not in Pending status
+- Cannot dispatch an order that is not in Confirmed status
+- Cannot cancel a Dispatched order
+- Cancellation releases committed stock back to available immediately
+- Once Dispatched, the order is locked forever
 
 ---
 
@@ -97,32 +119,36 @@ DistributorOrder
 
 ### Flow 1 — Low Stock Alert
 ```
-Sales Manager confirms an order
+LowStockMonitor runs every 5 minutes
         ↓
-Stock for each allocated SKU is consumed
+Queries StockLots where (OnHand − Committed) ≤ 50
         ↓
-System checks: is remaining stock below threshold?
-        ↓ (if yes)
-LowStockEvent published to Azure Service Bus
+Publishes LowStockEvent to in-memory Channel<IDomainEvent>
         ↓
-Notification consumer picks it up
+NotificationConsumer picks it up
         ↓
-Sales Manager receives alert:
-"Carrara White 600x600 — only 120 boxes remaining. Consider next import."
+Writes Notification row to DB
+        ↓
+Admin/SalesAgent sees it on next GET /notifications poll
 ```
 
 ### Flow 2 — Order Status Change Notification
 ```
-Sales Manager updates order status
-(Allocated → Confirmed, or Confirmed → Dispatched)
+SalesAgent confirms or dispatches an order
         ↓
-OrderStatusChangedEvent published to Azure Service Bus
+OrderStatusChangedEvent published to in-memory Channel<IDomainEvent>
         ↓
-Notification consumer picks it up
+NotificationConsumer picks it up
         ↓
-Distributor receives alert:
-"Your order #ORD-2024-0042 has been dispatched."
+Writes Notification row (CustomerId set = distributor-specific)
+        ↓
+Distributor sees it on next GET /notifications poll
 ```
+
+> **Note on messaging:** `IEventBus` is backed by `System.Threading.Channels` for
+> single-instance deployments. Azure Service Bus is provisioned in Bicep for
+> production scale-out. Swapping Channel → Service Bus requires only a one-line
+> change in Program.cs — no domain or consumer code changes.
 
 ---
 
@@ -134,68 +160,101 @@ MarbleCraftOMS/
 │   ├── MarbleCraftOMS.Api/                  # ASP.NET Core 10 Web API
 │   │   ├── Controllers/
 │   │   │   ├── AuthController.cs
-│   │   │   ├── CatalogueController.cs
+│   │   │   ├── CustomersController.cs
 │   │   │   ├── InventoryController.cs
-│   │   │   └── OrdersController.cs
+│   │   │   ├── NotificationsController.cs
+│   │   │   ├── OrdersController.cs
+│   │   │   ├── ProductsController.cs
+│   │   │   ├── SuppliersController.cs
+│   │   │   └── UsersController.cs
 │   │   ├── Middleware/
-│   │   ├── Program.cs
-│   │   └── MarbleCraftOMS.Api.csproj
+│   │   │   ├── AuditMiddleware.cs           # logs every request post-execution
+│   │   │   └── GlobalExceptionHandler.cs   # maps domain exceptions → HTTP codes
+│   │   ├── Services/
+│   │   │   ├── AuthService.cs
+│   │   │   └── UserService.cs
+│   │   ├── Data/
+│   │   │   └── DbInitializer.cs             # seeds users on first run
+│   │   └── Program.cs
 │   │
-│   ├── MarbleCraftOMS.Core/                 # Domain — no dependencies
+│   ├── MarbleCraftOMS.Core/                 # Domain — no external dependencies
 │   │   ├── Entities/
-│   │   │   ├── DistributorOrder.cs          # Core aggregate
+│   │   │   ├── AppUser.cs
+│   │   │   ├── Customer.cs
+│   │   │   ├── DistributorOrder.cs          # core aggregate
+│   │   │   ├── Notification.cs
 │   │   │   ├── OrderLine.cs
 │   │   │   ├── Product.cs
-│   │   │   └── StockEntry.cs
+│   │   │   ├── StockLot.cs                  # lot-level inventory tracking
+│   │   │   └── Supplier.cs
+│   │   ├── Enums/
+│   │   │   └── OrderStatus.cs
 │   │   ├── Events/
 │   │   │   ├── LowStockEvent.cs
 │   │   │   └── OrderStatusChangedEvent.cs
-│   │   ├── Interfaces/
-│   │   │   ├── IOrderRepository.cs
-│   │   │   ├── IInventoryRepository.cs
-│   │   │   └── ICatalogueRepository.cs
-│   │   └── MarbleCraftOMS.Core.csproj
+│   │   ├── Constants/
+│   │   │   └── Roles.cs
+│   │   └── Interfaces/
+│   │       ├── ICustomerRepository.cs
+│   │       ├── IEventBus.cs
+│   │       ├── IInventoryRepository.cs
+│   │       ├── INotificationRepository.cs
+│   │       ├── IOrderRepository.cs
+│   │       ├── IProductRepository.cs
+│   │       ├── ISupplierRepository.cs
+│   │       └── IUserRepository.cs
 │   │
 │   ├── MarbleCraftOMS.Application/          # Use cases / service layer
-│   │   ├── Orders/
-│   │   │   ├── PlaceOrderCommand.cs
-│   │   │   ├── AllocateStockCommand.cs
-│   │   │   └── ConfirmOrderCommand.cs
-│   │   ├── Inventory/
-│   │   │   └── CheckStockQuery.cs
-│   │   ├── Catalogue/
-│   │   │   └── GetProductsQuery.cs
-│   │   └── MarbleCraftOMS.Application.csproj
+│   │   ├── Auth/
+│   │   ├── Catalogue/                       # ProductService, browse query
+│   │   ├── Customers/                       # CustomerService
+│   │   ├── Inventory/                       # InventoryService, stock queries
+│   │   ├── Notifications/                   # NotificationService
+│   │   ├── Orders/                          # OrderService
+│   │   ├── Supplier/                        # SupplierService
+│   │   └── Users/                           # IUserService, DTOs, commands
 │   │
-│   ├── MarbleCraftOMS.Infrastructure/       # EF Core, Dapper, Service Bus
+│   ├── MarbleCraftOMS.Infrastructure/       # EF Core, Dapper, messaging
 │   │   ├── Persistence/
 │   │   │   ├── AppDbContext.cs
+│   │   │   ├── Configurations/              # Fluent API entity configs
 │   │   │   ├── Migrations/
 │   │   │   ├── Repositories/
-│   │   │   │   ├── OrderRepository.cs
+│   │   │   │   ├── CustomerRepository.cs
 │   │   │   │   ├── InventoryRepository.cs
-│   │   │   │   └── CatalogueRepository.cs
+│   │   │   │   ├── NotificationRepository.cs
+│   │   │   │   ├── OrderRepository.cs
+│   │   │   │   ├── ProductRepository.cs
+│   │   │   │   ├── SupplierRepository.cs
+│   │   │   │   └── UserRepository.cs
 │   │   │   └── DapperQueries/
-│   │   │       └── StockSummaryQuery.cs
+│   │   │       ├── ProductBrowseQuery.cs    # paginated catalogue with stock join
+│   │   │       └── StockSummaryQuery.cs     # aggregate stock per product
 │   │   ├── Messaging/
-│   │   │   └── ServiceBusPublisher.cs
-│   │   └── MarbleCraftOMS.Infrastructure.csproj
+│   │   │   └── InMemoryEventBus.cs          # Channel<IDomainEvent>
+│   │   └── Services/
+│   │       └── MemoryCacheAdapter.cs
 │   │
-│   └── MarbleCraftOMS.BackgroundServices/   # Hosted services
-│       ├── LowStockMonitor.cs
-│       ├── NotificationConsumer.cs
-│       └── MarbleCraftOMS.BackgroundServices.csproj
+│   └── MarbleCraftOMS.BackgroundServices/  # Hosted services
+│       ├── LowStockMonitor.cs               # timer-based, every 5 min
+│       └── NotificationConsumer.cs          # Channel consumer → DB writer
 │
 ├── tests/
 │   ├── MarbleCraftOMS.UnitTests/
-│   │   └── MarbleCraftOMS.UnitTests.csproj
 │   └── MarbleCraftOMS.IntegrationTests/
-│       └── MarbleCraftOMS.IntegrationTests.csproj
 │
-├── .github/
-│   └── workflows/
-│       └── ci.yml
+├── marble-craft-oms/                        # Angular 21 frontend
 │
+├── infra/                                   # Bicep IaC
+│   ├── main.bicep
+│   └── modules/
+│       ├── api.bicep
+│       ├── network.bicep
+│       ├── sql.bicep
+│       └── servicebus.bicep
+│
+├── k6/                                      # load tests
+├── .github/workflows/ci.yml
 └── MarbleCraftOMS.sln
 ```
 
@@ -203,9 +262,10 @@ MarbleCraftOMS/
 
 ## Why Modular Monolith
 
-Each bounded context (Identity, Catalogue, Inventory, Orders, Notifications) is a
-separate folder with its own interfaces and models. They communicate through the
-Application layer — not through direct database joins across contexts.
+Each bounded context (Identity, Catalogue, Inventory, Orders, Notifications,
+Suppliers, Customers, Users) is a separate folder with its own interfaces and models.
+They communicate through the Application layer — not through direct database joins
+across contexts.
 
 This means the system can be split into separate services later if MarbleCraft grows —
 without rewriting the domain logic.
@@ -219,10 +279,11 @@ without rewriting the domain logic.
 | Backend API | ASP.NET Core 10 |
 | ORM (writes) | EF Core 10 |
 | Raw reads | Dapper |
-| Database | SQL Server |
-| Async messaging | Azure Service Bus |
-| Background jobs | BackgroundService + Channel |
+| Database | SQL Server (Azure SQL in prod, LocalDB in dev) |
+| Async messaging | In-memory `Channel<IDomainEvent>` (Azure Service Bus provisioned in Bicep for scale-out) |
+| Background jobs | `BackgroundService` + `Channel<T>` |
 | Frontend | Angular 21 |
-| Auth | JWT (Sales Manager + Distributor roles) |
-| Deploy | Azure Container Apps + Static Web Apps |
+| Auth | JWT — Local (HMAC-SHA256) for dev; Azure Entra ID for prod |
+| Secrets | Azure Key Vault via Managed Identity |
+| Deploy | Azure Container Apps + Bicep IaC (azd) |
 | CI/CD | GitHub Actions |
