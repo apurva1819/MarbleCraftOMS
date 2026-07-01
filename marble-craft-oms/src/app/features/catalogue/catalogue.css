@@ -1,8 +1,109 @@
+/* ── Catalogue header ── */
 .count-badge {
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: 999px; padding: 2px 12px;
+  background: var(--marble-cream);
+  border: 1px solid var(--border);
+  border-radius: 999px; padding: 3px 14px;
   font-size: 12px; color: var(--text-2);
+  font-weight: 500;
 }
-.product-name { font-weight: 600; }
-.product-format { font-size: 11px; color: var(--text-2); }
-.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+/* ── Marble hero banner ── */
+.catalogue-hero {
+  border-radius: 12px;
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  background-image: url('/marble-hero-banner.svg');
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  display: flex; align-items: center; gap: 16px;
+  overflow: hidden; position: relative;
+  min-height: 96px;
+}
+.catalogue-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(15,30,48,.7) 0%, rgba(15,30,48,.3) 60%, transparent 100%);
+  border-radius: 12px;
+}
+.catalogue-hero > * { position: relative; z-index: 1; }
+.catalogue-hero-icon {
+  font-size: 40px; line-height: 1;
+  filter: drop-shadow(0 2px 8px rgba(201,169,110,.5));
+}
+.catalogue-hero-text h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 20px; font-weight: 700;
+  color: #fff; margin-bottom: 4px;
+}
+.catalogue-hero-text p {
+  font-size: 13px; color: rgba(255,255,255,.55);
+}
+
+/* ── Product name cell ── */
+.product-cell { display: flex; align-items: center; gap: 8px; }
+.product-name { font-weight: 600; color: var(--navy); }
+.product-link {
+  font-weight: 600; color: var(--navy);
+  text-decoration: underline; text-decoration-color: transparent;
+  text-underline-offset: 2px; transition: color .15s, text-decoration-color .15s;
+  cursor: pointer;
+}
+.product-link:hover { color: var(--gold); text-decoration-color: var(--gold); }
+.product-format { font-size: 11px; color: var(--text-2); margin-top: 1px; }
+
+/* ── Marble swatch in table ── */
+.marble-swatch {
+  width: 22px; height: 22px; border-radius: 5px;
+  border: 1px solid rgba(0,0,0,.12);
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.5), 0 1px 3px rgba(0,0,0,.1);
+}
+
+/* ── Order btn ── */
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+
+/* ── Inventory inventory low stock indicator ── */
+.stock-cell { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+.stock-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--success); flex-shrink: 0;
+}
+.stock-dot.low { background: var(--danger); }
+
+/* ── Add Product Modal ── */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 200;
+}
+.modal-box {
+  position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 560px; max-width: calc(100vw - 32px);
+  max-height: 90vh; overflow-y: auto;
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+  z-index: 201;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px; font-weight: 600;
+  position: sticky; top: 0; background: var(--card);
+}
+.modal-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 14px; color: var(--text-2); padding: 2px 6px; border-radius: 4px;
+}
+.modal-close:hover { background: var(--bg); color: var(--text); }
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.modal-footer {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 12px 20px; border-top: 1px solid var(--border);
+  position: sticky; bottom: 0; background: var(--card);
+}
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }

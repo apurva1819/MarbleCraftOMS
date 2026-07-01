@@ -61,6 +61,17 @@ services:
     project: src/MarbleCraftOMS.Api
     language: dotnet
     host: containerapp
+    hooks:
+      prepackage:
+        windows:
+          shell: pwsh
+          run: |
+            if (-not (Test-Path "../../marble-craft-oms/node_modules")) { npm --prefix ../../marble-craft-oms install }
+            Push-Location ../../marble-craft-oms
+            npx ng build --configuration production
+            Pop-Location
+            New-Item -ItemType Directory -Force -Path wwwroot | Out-Null
+            Copy-Item -Recurse -Force ../../marble-craft-oms/dist/marble-craft-oms/browser/* wwwroot/
     docker:
       path: src/MarbleCraftOMS.Api/Dockerfile
       registry: mcacr32fa.azurecr.io

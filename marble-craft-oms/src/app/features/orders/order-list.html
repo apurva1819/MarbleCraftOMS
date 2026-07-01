@@ -36,17 +36,17 @@
               <td>{{ o.orderDate | date:'dd MMM yyyy' }}</td>
               <td>{{ o.lineCount }}</td>
               <td class="text-right">{{ o.totalAmount | currency:'INR':'symbol':'1.0-2' }}</td>
-              <td><span [class]="statusClass(o.status)">{{ o.status }}</span></td>
+              <td><span [class]="statusClass(o.status)">{{ toLabel(o.status) }}</span></td>
               @if (auth.isSalesOrAdmin()) {
                 <td>
                   <div class="actions">
-                    @if (o.status === 'Pending') {
+                    @if (isPending(o.status)) {
                       <button class="btn btn-success" (click)="confirm(o)">Confirm</button>
                     }
-                    @if (o.status === 'Confirmed') {
+                    @if (isConfirmed(o.status)) {
                       <button class="btn btn-warning" (click)="dispatch(o)">Dispatch</button>
                     }
-                    @if (o.status !== 'Dispatched' && o.status !== 'Cancelled') {
+                    @if (isNonTerminal(o.status)) {
                       <button class="btn btn-danger" (click)="cancel(o)">Cancel</button>
                     }
                   </div>

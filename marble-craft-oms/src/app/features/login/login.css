@@ -1,22 +1,70 @@
+/* ── Login page: marble slab background ── */
 .login-page {
-  min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  background: var(--navy);
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  background-color: #e8e0d4;
+  background-image:
+    /* Marble veins layer 1 */
+    linear-gradient(112deg, transparent 20%, rgba(255,255,255,.55) 20.5%, rgba(255,255,255,.25) 21.2%, transparent 22%),
+    linear-gradient(198deg, transparent 38%, rgba(200,188,172,.6) 38.5%, rgba(200,188,172,.28) 39.2%, transparent 40%),
+    linear-gradient( 78deg, transparent 60%, rgba(215,205,190,.45) 60.5%, rgba(215,205,190,.2) 61%, transparent 61.5%),
+    linear-gradient(155deg, transparent 70%, rgba(180,168,152,.4) 70.5%, rgba(180,168,152,.18) 71.2%, transparent 72%),
+    /* subtle tone clouds */
+    radial-gradient(ellipse at 15% 85%, rgba(210,198,182,.55) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 15%, rgba(195,183,165,.45) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 50%, rgba(230,222,210,.3) 0%, transparent 60%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative marble tile grid behind the card */
+.login-page::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
 }
 
 .login-card {
-  background: var(--card); border-radius: 14px;
-  padding: 40px 36px; width: 360px;
-  box-shadow: 0 8px 32px rgba(0,0,0,.25);
+  position: relative;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 44px 40px;
+  width: 380px;
+  box-shadow: 0 4px 6px rgba(0,0,0,.06), 0 16px 48px rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.8);
+  border-top: 3px solid var(--gold);
 }
 
-.login-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
-.login-mark  { color: var(--gold); font-size: 22px; }
-.login-title { font-size: 18px; font-weight: 700; }
-.login-sub   { font-size: 13px; color: var(--text-2); margin-bottom: 28px; }
+/* Gold diamond logo mark */
+.login-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.login-mark  {
+  color: var(--gold); font-size: 24px;
+  filter: drop-shadow(0 1px 2px rgba(201,169,110,.5));
+}
+.login-title {
+  font-size: 20px; font-weight: 700;
+  font-family: 'Playfair Display', Georgia, serif;
+  color: var(--navy);
+  letter-spacing: -.01em;
+}
+.login-sub   { font-size: 13px; color: var(--text-2); margin-bottom: 28px; letter-spacing: .02em; }
 
 .login-form  { display: flex; flex-direction: column; gap: 16px; }
 
-.login-btn   { width: 100%; justify-content: center; padding: 10px; font-size: 14px; margin-top: 4px; }
+.login-btn {
+  width: 100%; justify-content: center;
+  padding: 11px; font-size: 14px; margin-top: 4px;
+  background: var(--navy); color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(26,46,74,.35);
+  transition: background .2s, box-shadow .2s;
+}
+.login-btn:hover { background: var(--navy-light); box-shadow: 0 4px 14px rgba(26,46,74,.45); }
 
 .login-hints {
   margin-top: 20px; padding-top: 16px;

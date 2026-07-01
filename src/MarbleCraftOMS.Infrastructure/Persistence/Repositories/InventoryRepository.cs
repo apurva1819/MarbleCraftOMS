@@ -15,6 +15,12 @@ public class InventoryRepository(AppDbContext db) : IInventoryRepository
     public async Task<StockLot?> GetLotAsync(int stockLotId) =>
         await db.StockLots.FindAsync(stockLotId);
 
+    public async Task AddLotAsync(StockLot lot)
+    {
+        await db.StockLots.AddAsync(lot);
+        await db.SaveChangesAsync();
+    }
+
     public async Task SaveAsync() =>
         await db.SaveChangesAsync();
 }

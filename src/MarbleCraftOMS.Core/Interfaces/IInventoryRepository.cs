@@ -6,5 +6,6 @@ public interface IInventoryRepository
 {
     Task<List<StockLot>> GetLotsBySkuAsync(int sku);
     Task<StockLot?> GetLotAsync(int stockLotId);
+    Task AddLotAsync(StockLot lot);
     Task SaveAsync();
 }

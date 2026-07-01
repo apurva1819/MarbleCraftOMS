@@ -1,3 +1,4 @@
+using MarbleCraftOMS.Core.Entities;
 using MarbleCraftOMS.Core.Interfaces;
 
 namespace MarbleCraftOMS.Application.Inventory;
@@ -33,15 +34,48 @@ public class InventoryService(
 
     public Task<List<StockSummaryItem>> GetSummaryAsync() => summaryQuery.GetSummaryAsync();
 
+    public async Task<StockLotDetail> CreateLotAsync(CreateStockLotCommand cmd)
+    {
+        if (cmd.QuantityOnHand <= 0)
+            throw new ArgumentException("Quantity must be positive.", nameof(cmd.QuantityOnHand));
+
+        var lot = new StockLot
+        {
+            ProductId      = cmd.ProductId,
+            SupplierId     = cmd.SupplierId,
+            LotNumber      = cmd.LotNumber,
+            QuantityOnHand = cmd.QuantityOnHand,
+            UnitCostPerSqm = cmd.UnitCostPerSqm,
+            ReceivedDate   = cmd.ReceivedDate
+        };
+
+        await repo.AddLotAsync(lot);
+
+        return new StockLotDetail
+        {
+            LotId          = lot.Id,
+            LotNumber      = lot.LotNumber,
+            OnHand         = lot.QuantityOnHand,
+            Committed      = lot.QuantityCommitted,
+            Available      = lot.QuantityAvailable,
+            UnitCostPerSqm = lot.UnitCostPerSqm,
+            ReceivedDate   = lot.ReceivedDate
+        };
+    }
+
     public async Task<AdjustStockResult?> AdjustAsync(AdjustStockCommand cmd)
     {
         var lot = await repo.GetLotAsync(cmd.StockLotId);
         if (lot is null) return null;
 
-        if (cmd.Type == AdjustmentType.Commit)
-            lot.CommitStock(cmd.Quantity);
-        else
-            lot.ReleaseStock(cmd.Quantity);
+        switch (cmd.Type)
+        {
+            case AdjustmentType.Commit:   lot.CommitStock(cmd.Quantity);  break;
+            case AdjustmentType.Release:  lot.ReleaseStock(cmd.Quantity); break;
+            case AdjustmentType.Receive:  lot.ReceiveStock(cmd.Quantity); break;
+            case AdjustmentType.WriteOff: lot.WriteOff(cmd.Quantity);     break;
+            default: throw new ArgumentException($"Unknown adjustment type: {cmd.Type}");
+        }
 
         await repo.SaveAsync();
 
