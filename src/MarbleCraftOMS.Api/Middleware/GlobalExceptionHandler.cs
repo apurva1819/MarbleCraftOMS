@@ -1,3 +1,4 @@
+using MarbleCraftOMS.Core.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,10 +13,11 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
     {
         var (statusCode, title) = exception switch
         {
-            KeyNotFoundException      => (StatusCodes.Status404NotFound,            "Resource not found"),
-            ArgumentException         => (StatusCodes.Status400BadRequest,          "Invalid request"),
-            InvalidOperationException => (StatusCodes.Status409Conflict,            "Operation not allowed"),
-            _                         => (StatusCodes.Status500InternalServerError, "An unexpected error occurred")
+            KeyNotFoundException           => (StatusCodes.Status404NotFound,            "Resource not found"),
+            UnprocessableEntityException   => (StatusCodes.Status422UnprocessableEntity, "Unprocessable entity"),
+            ArgumentException              => (StatusCodes.Status400BadRequest,          "Invalid request"),
+            InvalidOperationException      => (StatusCodes.Status409Conflict,            "Operation not allowed"),
+            _                              => (StatusCodes.Status500InternalServerError, "An unexpected error occurred")
         };
 
         logger.LogError(exception, "Unhandled exception [{StatusCode}]: {Message}", statusCode, exception.Message);
